@@ -1,0 +1,11 @@
+{
+	"name" : "sepbin/sepbin",
+	"description" : "the sepbin framework",
+	"type" : "project",
+	"autoload" : {
+		"psr-4" : {
+			"Sepbin\\" : "Sepbin/"
+		}
+	},
+	"license" : "MIT"
+}
