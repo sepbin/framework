@@ -2,7 +2,7 @@
 namespace Sepbin\Core;
 
 /**
- * 异常
+ * 异常基类
  * @author joson
  *
  */
