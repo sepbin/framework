@@ -1,5 +1,5 @@
 {
-	"name" : "sepbin/sepbin",
+	"name" : "sepbin/framework",
 	"description" : "the sepbin framework",
 	"type" : "project",
 	"autoload" : {
