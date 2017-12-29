@@ -1,12 +1,12 @@
 <?php
-namespace Sepbin\Core;
+namespace Sepbin\System\Core;
 
 /**
  * 钩子
  * @author joson
  *
  */
-class AbsHook extends Base
+abstract class AbsHook extends Base
 {
     
     

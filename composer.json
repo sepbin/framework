@@ -4,11 +4,11 @@
 	"type" : "project",
 	"autoload" : {
 		"psr-4" : {
-			"Sepbin\\" : ""
+			"Sepbin\\System\\" : ""
 		}
 	},
-	"require": {
-        "php": ">=7.0"
-    },
+	"require" : {
+		"php" : ">=7.0"
+	},
 	"license" : "MIT"
 }

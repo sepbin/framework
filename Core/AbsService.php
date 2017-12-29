@@ -1,5 +1,5 @@
 <?php
-namespace Sepbin\Core;
+namespace Sepbin\System\Core;
 
 /**
  * 服务

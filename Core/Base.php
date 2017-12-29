@@ -1,5 +1,5 @@
 <?php
-namespace Sepbin\Core;
+namespace Sepbin\System\Core;
 
 /**
  * 基础类型
@@ -10,17 +10,15 @@ class Base
 {
     
     
-    protected function getString(){
+    public function getString(){
         
-        
+        return 'Object#'.get_class($this);
         
     }
     
-    
-    
-    protected function getClassName(){
+    public function getClassName(){
         
-        
+        return get_class($this);
         
     }
     
