@@ -17,7 +17,7 @@ class ArrayUtil
      * @param array $arr 要转化的数组
      * @return string
      */
-    static public function toExpString( array $arr ){
+    static public function toExpString( array $arr ) : string{
         
         $appContent = '[';
         foreach ($arr as $key=>$value){
@@ -56,7 +56,7 @@ class ArrayUtil
      * @param bool $unique 返回结果是否去掉重复
      * @return array|unknown[]
      */
-    public static function getArrayCol(array $array, string $key, bool $unique=false){
+    public static function getArrayCol(array $array, string $key, bool $unique=false) : array{
         
         $col = array();
         if(!empty($array)){
@@ -84,7 +84,7 @@ class ArrayUtil
      * @param string $value_key 作为值的键值
      * @return array|unknown[]
      */
-    public static function getArrayKeyValArr(array $array, string $group_key, string $value_key){
+    public static function getArrayKeyValArr(array $array, string $group_key, string $value_key) : array{
         
         if(empty($array)) return array();
         
@@ -109,7 +109,7 @@ class ArrayUtil
      * @param string $value_key 作为新数组值的键值
      * @return array|unknown[]
      */
-    public static function getArrayKeyVal(array $array, string $group_key, string $value_key){
+    public static function getArrayKeyVal(array $array, string $group_key, string $value_key):array{
     	
     	if(empty($array)) return array();
     	
@@ -134,7 +134,7 @@ class ArrayUtil
      * @param string $group_key 键名
      * @return array|unknown[]
      */
-    public static function getArrayKeyArr(array $array, string $group_key){
+    public static function getArrayKeyArr(array $array, string $group_key):array{
     	if(empty($array)) return array();
     		
     	$data = array();
@@ -156,7 +156,7 @@ class ArrayUtil
      * @param string $group_key 键名
      * @return array|unknown[]
      */
-    public static function getArrayColKey(array $array, string $group_key){
+    public static function getArrayColKey(array $array, string $group_key):array{
     	
     	if(empty($array)) return array();
     		
@@ -182,7 +182,7 @@ class ArrayUtil
      * @param string|int $key 二维数组的键
      * @return boolean
      */
-    public static function inArrayCol($need, array $array, $key){
+    public static function inArrayCol($need, array $array, $key):bool{
     	
     	foreach ($array as $item){
     		if($item[$key] == $need)

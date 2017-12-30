@@ -21,7 +21,15 @@ class SepException extends \Exception
         
     }
     
-    public function __toString(){
+    public function appendMsg( string $msg ) : SepException{
+    	
+    	$this->message .= ' ( '.$msg.' )';
+    	
+    	return $this;
+    	
+    }
+    
+    public function __toString() : string{
         
         $str = '';
         $str .= "[$this->code]:$this->message";

@@ -15,6 +15,6 @@ interface IInstanceSetStrict
 	 * 则已执行过的实例，将会被回调此方法
 	 * @param string $method_name
 	 */
-	public function rollback( string $method_name );
+	public function rollback( string $method_name ):void;
 	
 }

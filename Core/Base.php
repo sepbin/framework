@@ -22,5 +22,11 @@ class Base
         
     }
     
+//     public function __debugInfo(){
+//     	return [
+//     			'a' => 'c'
+//     	];
+//     }
+    
     
 }

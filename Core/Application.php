@@ -3,6 +3,9 @@ namespace Sepbin\System\Core;
 
 use Sepbin\System\Http\Request;
 use Sepbin\System\Http\Response;
+use Sepbin\System\Core\Exception\RepeatHookException;
+use Sepbin\System\Util\InstanceSet;
+use Sepbin\System\Util\InstanceManager;
 
 /**
  * 应用入口
@@ -37,7 +40,7 @@ class Application extends Base
     private $startmemory;
     
     
-    static function getInstance(){
+    static function getInstance() : Application{
         
         static $instance = null;
         
@@ -69,12 +72,13 @@ class Application extends Base
     /**
      * 注册钩子
      */
-    public function registerHook( string $name, string $hook_name, string $method ){
+    public function registerHook( string $name, string $hook_name ) {
         
-    	$this->hook[ $name ] = array(
-    		'name' => $hook_name,
-    		'method' => $method
-    	);
+    	if( isset($this->hook[$name]) && in_array($hook_name, $this->hook[$name]) ){
+    		throw (new RepeatHookException() )->appendMsg( $name.' -> '.$hook_name );
+    	}
+    	
+    	$this->hook[ $name ][] = $hook_name;
     	
     }
     
@@ -89,18 +93,51 @@ class Application extends Base
     
     /**
      * 注册错误钩子
-     * @param unknown $errorCode
+     * @param int $errorCode
      * @param \Closure $func
+     * @return void
      */
-    public function registerErrorHandler( $error_code, \Closure $func ){
+    public function registerErrorHandler( int $error_code, \Closure $func ) {
         
         $this->errHandler[ $error_code ] = $func;
         
     }
     
+    
+    
+    /**
+     * 执行HOOK
+     * @param string $name 接口名
+     * @param string $method_name  方法名
+     * @param int $call_type 执行方式 InstanceSet::CALL_XX
+     * @param unknown ...$params
+     * @return void|array
+     */
+    public function hook( string $name, string $method_name, int $call_type, ...$params ){
+    	
+    	if( empty($this->hook[$name]) ){
+    		return ;
+    	}
+    	
+    	$set = new InstanceSet($name, $call_type);
+    	$instanceManager = InstanceManager::getInstance();
+    	
+    	foreach ( $this->hook[$name] as $item ){
+    		
+    		$set->add( $instanceManager->get($item) );
+    		
+    	}
+    	
+    	$method_name = '_'.$method_name;
+    	
+    	return $set->$method_name( ...$params );
+    	
+    }
+    
     /**
      * 运行过程
      * @param \Closure $func  运行的匿名函数
+     * @return void
      */
     public function process( \Closure $func ){
         
@@ -110,14 +147,19 @@ class Application extends Base
     
     /**
      * 开始运行
+     * @return null
      */
     public function run(){
+    	
+    	$this->hook('\Sepbin\System\Core\IApplicationHook', 'applicationStart', InstanceSet::CALL_VOID, $this );
         
         if( !empty($this->process) ){
             foreach ($this->process as $item){
                 $item();
             }
         }
+        
+        $this->hook('\Sepbin\System\Core\IApplicationHook', 'applicationEnd', InstanceSet::CALL_VOID, $this );
         
         if( DEBUG ){
             
@@ -138,7 +180,7 @@ class Application extends Base
      * 获取应用请求对象
      * @return \Sepbin\Http\Request
      */
-    public function getRequest(){
+    public function getRequest():Request{
     	return $this->request;
     }
     
@@ -147,7 +189,7 @@ class Application extends Base
      * 获取应用响应对象
      * @return \Sepbin\Http\Response
      */
-    public function getResponse(){
+    public function getResponse():Response{
     	return $this->response;
     }
     
@@ -186,6 +228,8 @@ class Application extends Base
             $this->errHandler[ $errno ]( $errno, $errstr, $errfile, $errline );
         }
         
+        $this->hook('\Sepbin\System\Core\IApplicationHook', 'applicationWarning', InstanceSet::CALL_VOID, $errno, $errstr, $errfile, $errline );
+        
     }
     
     /**
@@ -197,11 +241,14 @@ class Application extends Base
         AppExceptionView::html();
         
         if( isset($this->errHandler[ $e->getCode() ]) ){
-            
             $this->errHandler[ $e->getCode ]( $e->getCode(), $e->getMessage(), $e->getFile(), $e->getLine() );
-            
         }
         
+        try {
+        	$this->hook('\Sepbin\System\Core\IApplicationHook', 'applicationException', InstanceSet::CALL_VOID, $e->getCode(), $e->getMessage(), $e->getFile(), $e->getLine() );
+        }catch ( \Exception $e){
+        	
+        }
     }
     
     

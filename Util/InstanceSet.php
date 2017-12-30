@@ -2,7 +2,7 @@
 namespace Sepbin\System\Util;
 
 use Sepbin\System\Core\Base;
-use Sepbin\Util\Exception\InstanceSetTypeException;
+use Sepbin\System\Util\Exception\InstanceSetTypeException;
 
 /**
  * 实例集合
@@ -26,6 +26,7 @@ class InstanceSet extends Base
 	/**
 	 * 集合模式
 	 * 返回值将以数组的形式返回
+	 * 如果实例实现了\Sepbin\Core\IInstanceSetArray接口，则还会调用返回false实例的rollback方法
 	 * @var integer
 	 */
 	const CALL_ARRAY = 2;
@@ -41,10 +42,17 @@ class InstanceSet extends Base
 	
 	
 	/**
+	 * 不返回结果
+	 * @var integer
+	 */
+	const CALL_VOID = 4;
+	
+	
+	/**
 	 * 当前执行模式
 	 * @var integer
 	 */
-	private $callMode = 2;
+	private $callMode = self::CALL_VOID;
 	
 	
 	/**
@@ -83,7 +91,7 @@ class InstanceSet extends Base
 	public function add( $instance){
 		
 		if( !$instance instanceof $this->type ){
-			throw new InstanceSetTypeException();
+			throw (new InstanceSetTypeException())->appendMsg('需要 '.$this->type);
 		}
 		
 		$this->collection[] = $instance;
@@ -96,7 +104,7 @@ class InstanceSet extends Base
 	 * @param const $mode
 	 * @return \Sepbin\Core\InstanceSet
 	 */
-	public function setMode($mode){
+	public function setMode($mode) : InstanceSet{
 		
 		$this->callMode = $mode;
 		
@@ -106,12 +114,14 @@ class InstanceSet extends Base
 	/**
 	 * 得到索引所指向的一个实例
 	 * @param int $index
-	 * @return multitype:
 	 */
 	public function getIndex( int $index){
 		
-		if ( isset($this->collection[$index]) ) return $this->collection[$index];
+		if ( isset($this->collection[$index]) ){
+			return $this->collection[$index];
+		}
 		
+		return null;
 	}
 	
 	
@@ -119,12 +129,114 @@ class InstanceSet extends Base
 	 * 得到集合的长度
 	 * @return int
 	 */
-	public function getLength(){
+	public function getLength():int{
 		
 		return count( $this->collection );
 		
 	}
     
+	
+	
+	private function checkType( $item ) : bool{
+		
+		return isset( $this->type ) && is_string( $this->type ) && !$item instanceof $this->type;
+		
+	}
+	
+	
+	private function callArray( string $name, array $arg ) : array {
+		
+		$result = array();
+		
+		foreach ($this->collection as $item){
+			
+			if ( $this->checkType($item) ) continue;
+			
+			$return = call_user_func_array( array($item , $name) ,$arg );
+			
+			if( $return === false && $item instanceof IInstanceSetArray ){
+				$item->rollback($name);
+			}
+			
+			$result[] = $return;
+			
+		}
+		
+		return $result;
+		
+	}
+	
+	
+	
+	private function callTunnel( string $name, array $arg ) {
+		
+		$val = isset($arg[0])?$arg[0]:'';
+		
+		foreach ($this->collection as $item){
+			
+			if ( $this->checkType($item) ) continue;
+			
+			if (isset($arg[0])) $arg[0] = $val;
+			
+			$return = call_user_func_array( array($item , $name) ,$arg );
+			
+			$val = $return;
+			
+			
+		}
+		
+		return $val;
+		
+	}
+	
+	private function callBoolStrict( string $name, array $arg ) : bool{
+		
+		$ready = array();
+		
+		foreach ($this->collection as $item){
+			
+			$return = false;
+			
+			if ( $this->checkType($item) ) continue;
+			
+			$return = call_user_func_array( array($item , $name) ,$arg );
+			
+			if( !$return ){
+				$this->error = get_class($item).':'.$name;
+				
+				if(!empty($ready)){
+					foreach ($ready as $readyItem){
+						
+						if( $readyItem instanceof IInstanceSetStrict ){
+							$readyItem->rollback($name);
+						}
+						
+					}
+				}
+				
+				return false;
+			}
+			
+			$ready[] = $item;
+			
+		}
+		
+		return true;
+		
+	}
+	
+	
+	private function callVoid( string $name, array $arg ):void{
+		
+		foreach ($this->collection as $item){
+			
+			if ( $this->checkType($item) ) continue;
+			call_user_func_array( array($item , $name) ,$arg );
+			
+		}
+		
+	}
+	
 	/**
 	 * 执行方法
 	 * @param string $name
@@ -133,87 +245,35 @@ class InstanceSet extends Base
 	 */
 	function __call($name,$arg){
 		
-		$mode = $this->callMode;
-		$type = $this->type;
+		if( substr($name, 0, 1) != '_' ){
+			return ;
+		}
 		
-		if ($mode == self::CALL_ARRAY){
+		$name = substr($name, 1);
+		
+		if ( $this->callMode == self::CALL_ARRAY ){
 			
-			$result = array();
-			
-			foreach ($this->collection as $item){
-				
-				if ( isset( $type ) && is_string( $type ) && !$item instanceof $type ) continue;
-				
-				$return = call_user_func_array( array($item , $name) ,$arg );
-				
-				$result[] = $return;
-				
-			}
-			
-			return $result;
+			return $this->callArray($name, $arg);
 			
 		}
 		
 		
-		
-		
-		if ($mode == self::CALL_TUNNEL) {
+		if ( $this->callMode == self::CALL_TUNNEL) {
 			
-			$val = isset($arg[0])?$arg[0]:'';
+			return $this->callTunnel($name, $arg);
 			
-			foreach ($this->collection as $item){
-				
-				if ( isset( $type ) && is_string( $type ) && !$item instanceof $type ) continue;
-				
-				
-				if (isset($arg[0])) $arg[0] = $val;
-				
-				$return = call_user_func_array( array($item , $name) ,$arg );
-				
-				$val = $return;
-
-				
-			}
-			
-			return $val;
 		}
 		
 		
-		if( $mode == self::CALL_BOOL_STRICT ){
+		if( $this->callMode == self::CALL_BOOL_STRICT ){
 			
-			$ready = array();
+			return $this->callBoolStrict($name, $arg);
 			
-			foreach ($this->collection as $item){
-				
-				$return = false;
-				
-				if ( isset( $type ) && is_string( $type ) && !$item instanceof $type ) continue;
-				
-				$return = call_user_func_array( array($item , $name) ,$arg );
-				
-				if( !$return ){
-					$this->error = get_class($item).':'.$name;
-					
-					if(!empty($ready)){
-						foreach ($ready as $readyItem){
-							
-							if( $readyItem instanceof IInstanceSetStrict ){
-								
-								$readyItem->rollback($name);
-								
-							}
-							
-						}
-					}
-					
-					return false;
-				}
-				
-				$ready[] = $item;
-				
-			}
+		}
+		
+		if( $this->callMode == self::CALL_VOID ){
 			
-			return true;
+			$this->callVoid($name, $arg);
 			
 		}
 		
@@ -223,7 +283,7 @@ class InstanceSet extends Base
 	 * 在严格模式中，可以获取错误的类型
 	 * @return string
 	 */
-	public function getError(){
+	public function getError():string{
 		return $this->error;
 	}
 	

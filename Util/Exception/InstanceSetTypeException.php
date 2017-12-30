@@ -1,7 +1,7 @@
 <?php
-namespace Sepbin\Util\Exception;
+namespace Sepbin\System\Util\Exception;
 
-use Sepbin\Core\SepException;
+use Sepbin\System\Core\SepException;
 
 class InstanceSetTypeException extends SepException
 {
