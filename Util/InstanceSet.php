@@ -152,7 +152,7 @@ class InstanceSet extends Base
 			
 			if ( $this->checkType($item) ) continue;
 			
-			$return = call_user_func_array( array($item , $name) ,$arg );
+			$return = $item->$name( ...$arg );
 			
 			if( $return === false && $item instanceof IInstanceSetArray ){
 				$item->rollback($name);
@@ -178,7 +178,7 @@ class InstanceSet extends Base
 			
 			if (isset($arg[0])) $arg[0] = $val;
 			
-			$return = call_user_func_array( array($item , $name) ,$arg );
+			$return = $item->$name(...$arg);
 			
 			$val = $return;
 			
@@ -199,8 +199,7 @@ class InstanceSet extends Base
 			
 			if ( $this->checkType($item) ) continue;
 			
-			$return = call_user_func_array( array($item , $name) ,$arg );
-			
+			$return = $item->$name(...$arg);
 			if( !$return ){
 				$this->error = get_class($item).':'.$name;
 				
@@ -231,7 +230,7 @@ class InstanceSet extends Base
 		foreach ($this->collection as $item){
 			
 			if ( $this->checkType($item) ) continue;
-			call_user_func_array( array($item , $name) ,$arg );
+			$return = $item->$name(...$arg);
 			
 		}
 		

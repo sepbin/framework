@@ -8,6 +8,7 @@ class AppInfoView extends Base
     
     static $runmemory;
     
+    static $app;
     
     static public function html(){
         
@@ -42,6 +43,19 @@ class AppInfoView extends Base
         
         <?php
         
+    }
+    
+    static public function string(){
+    	
+    	echo "\n----------------------------------------------\n";
+    	echo "debug info\n";
+    	echo "run time:".self::$runtime."s  memory:".self::$runmemory."M\n";
+    	echo "----------------------------------------------\n";
+    	foreach ( AppInfo::$log as $item ){
+    		echo $item->msg."\n";
+    	}
+    	
+    	echo "\n";
     }
     
 }

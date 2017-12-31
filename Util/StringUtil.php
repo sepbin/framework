@@ -50,4 +50,19 @@ class StringUtil
 		
 	}
 	
+	
+	/**
+	 * 骆驼式命名转下划线命名
+	 * @param unknown $name
+	 * @return string
+	 */
+	static public function camelToUnderline($name):string{
+		
+		$name = preg_replace('/([A-Z]{1})/','_$1',$name);
+		$name = strtolower($name);
+		$name = ltrim($name,'_');
+		return $name;
+		
+	}
+	
 }

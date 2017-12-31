@@ -29,14 +29,14 @@ class Application extends Base implements IFactoryEnable
     
     /**
      * 应用的请求对象
-     * @var \Sepbin\Http\Request
+     * @var \Sepbin\System\Http\Request
      */
     private $request;
     
     
     /**
      * 应用的响应对象
-     * @var \Sepbin\Http\Response
+     * @var \Sepbin\System\Http\Response
      */
     private $response;
     
@@ -55,6 +55,7 @@ class Application extends Base implements IFactoryEnable
     	
     	$app = new Application( $config->getBool('debug',true) );
     	
+    	
     	return $app;
     	
     }
@@ -71,13 +72,17 @@ class Application extends Base implements IFactoryEnable
             $this->startmemory = memory_get_usage();
         }
         
-        $this->request = new Request();
-        $this->response = new Response();
-        
         set_error_handler(array($this,'error'));
         set_exception_handler(array($this,'exception'));
         
+        
+        $this->request = new Request( $this );
+        $this->response = new Response( $this );
+        
+        
     }
+    
+    
     
     
     /**
@@ -156,30 +161,43 @@ class Application extends Base implements IFactoryEnable
         
     }
     
+    
+    
     /**
      * 开始运行
      * @return null
      */
     public function run(){
     	
-    	$this->hook('\Sepbin\System\Core\IApplicationHook', 'applicationStart', InstanceSet::CALL_VOID, $this );
+    	$this->hook(IApplicationHook::class, 'applicationStart', InstanceSet::CALL_VOID, $this );
         
+    	
         if( !empty($this->process) ){
             foreach ($this->process as $item){
                 $item();
             }
         }
         
-        $this->hook('\Sepbin\System\Core\IApplicationHook', 'applicationEnd', InstanceSet::CALL_VOID, $this );
+        $this->hook(IApplicationHook::class, 'applicationEnd', InstanceSet::CALL_VOID, $this );
         
         if( $this->debug ){
             
             $endtime = explode(' ',microtime());
             $runtime = $endtime[0]+$endtime[1]-($this->starttime[0]+$this->starttime[1]);
             $runtime = round($runtime,5);
+            
+            AppInfoView::$app = $this;
             AppInfoView::$runtime = $runtime;
             AppInfoView::$runmemory = round( (memory_get_usage() - $this->startmemory)/1024/1024, 3 );
-            AppInfoView::html();
+            
+            if( $this->request->getRequestType() == Request::REQUEST_TYPE_CONSOLE ){
+            	AppInfoView::string();
+            }elseif ( $this->request->getRequestType() == Request::REQUEST_TYPE_POST ){
+            	
+            }else{
+            	AppInfoView::html();
+            }
+            
             
         }
         
@@ -202,6 +220,11 @@ class Application extends Base implements IFactoryEnable
      */
     public function getResponse():Response{
     	return $this->response;
+    }
+    
+    
+    public function isDebug():bool{
+    	return $this->debug;
     }
     
     
@@ -239,7 +262,7 @@ class Application extends Base implements IFactoryEnable
             $this->errHandler[ $errno ]( $errno, $errstr, $errfile, $errline );
         }
         
-        $this->hook('\Sepbin\System\Core\IApplicationHook', 'applicationWarning', InstanceSet::CALL_VOID, $errno, $errstr, $errfile, $errline );
+        $this->hook(IApplicationHook::class, 'applicationWarning', InstanceSet::CALL_VOID, $errno, $errstr, $errfile, $errline );
         
     }
     
@@ -248,15 +271,22 @@ class Application extends Base implements IFactoryEnable
      */
     public function exception( $e ){
         
-        AppExceptionView::$err = $e;
-        AppExceptionView::html();
+    	AppExceptionView::$app = $this;
+    	AppExceptionView::$err = $e;
+    	if( $this->request->getRequestType() == Request::REQUEST_TYPE_CONSOLE ){
+    		AppExceptionView::string();
+    	}elseif ( $this->request->getRequestType() == Request::REQUEST_TYPE_POST ){
+    		AppExceptionView::json();
+    	}else{
+    		AppExceptionView::html();
+    	}
         
         if( isset($this->errHandler[ $e->getCode() ]) ){
             $this->errHandler[ $e->getCode ]( $e->getCode(), $e->getMessage(), $e->getFile(), $e->getLine() );
         }
         
         try {
-        	$this->hook('\Sepbin\System\Core\IApplicationHook', 'applicationException', InstanceSet::CALL_VOID, $e->getCode(), $e->getMessage(), $e->getFile(), $e->getLine() );
+        	$this->hook(IApplicationHook::class, 'applicationException', InstanceSet::CALL_VOID, $e->getCode(), $e->getMessage(), $e->getFile(), $e->getLine() );
         }catch ( \Exception $e){
         	
         }

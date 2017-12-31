@@ -15,13 +15,21 @@ class Factory
 		}
 		
 		if( $config_namespace == null ){
-			$config_namespace = '____default____';
-		}
 			
-		$config = new FactoryConfig( ConfigUtil::getInstance()->getNamespace($config_namespace) );
-		if( !isset( self::$scheme[ $name ][ $config_namespace ] ) ){
-			self::$scheme[ $name ][ $config_namespace ] = $name::_factory( $config );
+			$config_namespace = '____default____';
+			
 		}
+		
+			
+		
+		if( !isset( self::$scheme[ $name ][ $config_namespace ] ) ){
+			
+			$config = new FactoryConfig( ConfigUtil::getInstance()->getNamespace($config_namespace) );
+			
+			self::$scheme[ $name ][ $config_namespace ] = $name::_factory( $config );
+			
+		}
+		
 		return self::$scheme[ $name ][ $config_namespace ];
 			
 		

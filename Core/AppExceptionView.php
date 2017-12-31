@@ -12,6 +12,8 @@ class AppExceptionView extends Base
      */
     static $err;
     
+    static $app;
+    
     static public function html(){
         
         ?>
@@ -25,11 +27,11 @@ class AppExceptionView extends Base
         	</div>
         	<div style="padding:10px;">
         		异常代码：<?php echo self::$err->getCode()?><br/>
-        		
-        		<?php if( DEBUG ):?>
+        		错误信息：<?php echo self::$err->getMessage()?><br/>
+        		<?php if( self::$app->isDebug() ):?>
         		文件位置：<?php echo self::$err->getFile()?><br/>
         		所在行数：<?php echo self::$err->getLine()?><br/>
-        		错误信息：<?php echo self::$err->getMessage()?><br/>
+        		
         		
         		<div style="padding:10px;background:#fefefe; margin-top:10px; border:1px solid #ccc;">
         		<table style="font-size:12px; width:100%">
@@ -83,6 +85,43 @@ class AppExceptionView extends Base
         </html>
         <?php 
         
+    }
+    
+    
+    static public function json(){
+    	
+    	$msg = array(
+    			'errcode' => self::$err->getCode(),
+    			'message' => self::$err->getMessage()
+    	);
+    	
+    	if( self::$app->isDebug() ){
+	    	$msg = array_merge($msg, array(
+	    			'file' => self::$err->getFile(),
+	    			'line' => self::$err->getLine(),
+	    			
+	    	));
+    	}
+    	
+    	echo json_encode( $msg );
+    	
+    }
+    
+    static public function string(){
+    	
+    	echo "----------------------------------------------\n";
+    	echo "throw exception\n";
+    	echo "----------------------------------------------\n";
+    	echo "errcode:".self::$err->getCode()."\n";
+    	echo "message:".self::$err->getMessage()."\n";
+    	
+    	if( self::$app->isDebug() ){
+    		echo "file:".self::$err->getFile()."\n";
+    		echo "line:".self::$err->getLine()."\n";
+    	}
+    	
+    	echo "----------------------------------------------\n";
+    	
     }
     
     
