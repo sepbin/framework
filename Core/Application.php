@@ -6,15 +6,20 @@ use Sepbin\System\Http\Response;
 use Sepbin\System\Core\Exception\RepeatHookException;
 use Sepbin\System\Util\InstanceSet;
 use Sepbin\System\Util\InstanceManager;
+use Sepbin\System\Util\IFactoryEnable;
+use Sepbin\System\Util\FactoryConfig;
+use Sepbin\System\Util\Factory;
 
 /**
  * 应用入口
  * @author joson
  *
  */
-class Application extends Base
+class Application extends Base implements IFactoryEnable
 {
     
+	private $debug = true;
+	
     private $process = array();
     
     private $errHandler = array();
@@ -40,21 +45,28 @@ class Application extends Base
     private $startmemory;
     
     
-    static function getInstance() : Application{
+    static public function getInstance( string $config_namespace=null, string $config_file=null, string $config_path=CONFIG_DIR ) : Application{
         
-        static $instance = null;
-        
-        if( $instance == null ){
-            $instance = new Application();
-        }
-        
-        return $instance;
+        return Factory::get( Application::class, $config_namespace, $config_file, $config_path );
         
     }
     
-    function __construct(){
+    static public function _factory( FactoryConfig $config ) : IFactoryEnable{
+    	
+    	$app = new Application( $config->getBool('debug',true) );
+    	
+    	return $app;
+    	
+    }
+    
+    
+    
+    function __construct( bool $debug=true ){
+    	
+    	$this->debug = $debug;
+    	
         
-        if( DEBUG ){
+        if( $this->debug ){
             $this->starttime = explode(' ',microtime());
             $this->startmemory = memory_get_usage();
         }
@@ -63,7 +75,6 @@ class Application extends Base
         $this->response = new Response();
         
         set_error_handler(array($this,'error'));
-        
         set_exception_handler(array($this,'exception'));
         
     }
@@ -161,7 +172,7 @@ class Application extends Base
         
         $this->hook('\Sepbin\System\Core\IApplicationHook', 'applicationEnd', InstanceSet::CALL_VOID, $this );
         
-        if( DEBUG ){
+        if( $this->debug ){
             
             $endtime = explode(' ',microtime());
             $runtime = $endtime[0]+$endtime[1]-($this->starttime[0]+$this->starttime[1]);

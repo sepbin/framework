@@ -28,11 +28,9 @@ class Request extends Base
 	 */
 	private $requestType;
 	
-	/**
-	 * 请求的IP
-	 * @var string
-	 */
-	private $ip;
+	
+	public $param;
+	
 	
 	function __construct(){
 		
