@@ -1,7 +1,7 @@
 <?php
 namespace Sepbin\System\Http;
 
-class contentType
+class ContentType
 {
 	
 	static $type = array(
@@ -342,16 +342,21 @@ class contentType
 	  'xwd'=>'application/x-xwd',
 	  'x_b'=>'application/x-x_b',
 	  'x_t'=>'application/x-x_t',
+			
 	);
 	
-	static public function getMimeType( $extension ){
+	static public function getMimeType( string $extension ){
 		
 		if (isset(self::$type[$extension])){
+			
 			return self::$type[$extension];
+			
 		}
 		
 		return self::$type['*'];
 		
 	}
+	
+	
 	
 }

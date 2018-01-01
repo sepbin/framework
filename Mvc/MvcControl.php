@@ -10,6 +10,8 @@ use Sepbin\System\Mvc\Exception\RenderErrorException;
 use Sepbin\System\Mvc\Restful\RestfulModel;
 use Sepbin\System\Mvc\Restful\RestfulViewRender;
 use Sepbin\System\Util\HookRun;
+use Sepbin\System\Mvc\Auto\AbsAutoController;
+use Sepbin\System\Mvc\Auto\AutoViewRender;
 
 class MvcControl extends Base
 {
@@ -133,7 +135,11 @@ class MvcControl extends Base
 			
 		}else{
 			
-			$render = new ViewRender();
+			if( $instance instanceof AbsAutoController ){
+				$render = new AutoViewRender();
+			}else{
+				$render = new ViewRender();
+			}
 			
 		}
 		
@@ -144,9 +150,6 @@ class MvcControl extends Base
 		return $render->get($result);
 		
 	}
-	
-	
-	
 	
 	private function getActionName():string{
 		

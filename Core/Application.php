@@ -274,7 +274,7 @@ class Application extends Base implements IFactoryEnable
      */
     public function exception( $e ){
         
-    	$this->response->bufferOut(function(){
+    	$this->response->bufferOut(function() use ($e){
 	    	AppExceptionView::$app = $this;
 	    	AppExceptionView::$err = $e;
 	    	if( $this->request->getRequestType() == Request::REQUEST_TYPE_CONSOLE ){
@@ -295,6 +295,9 @@ class Application extends Base implements IFactoryEnable
         }catch ( \Exception $e){
         	
         }
+        
+        $this->response->flush();
+        
     }
     
     

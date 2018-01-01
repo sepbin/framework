@@ -8,6 +8,10 @@ abstract class AbsController extends Base
 {
 	
 	
+	function __construct(){
+		
+	}
+	
 	/**
 	 * 
 	 * @return Model

@@ -14,7 +14,6 @@ class Template extends Base
 	
 	private $filename;
 	
-	
 	private $data;
 	
 	
@@ -39,6 +38,7 @@ class Template extends Base
 		return $filename;
 		
 	}
+	
 	
 	
 	public function getContent(){
