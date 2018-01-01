@@ -8,5 +8,15 @@ abstract class AbsController extends Base
 {
 	
 	
+	/**
+	 * 
+	 * @return Model
+	 */
+	protected function createModel():Model{
+		
+		return new Model();
+		
+	}
+	
 	
 }

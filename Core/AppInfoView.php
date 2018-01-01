@@ -12,8 +12,6 @@ class AppInfoView extends Base
     
     static public function html(){
         
-        
-        
         ?>
         
         <div style="background:#fff; margin-top:10px; color:#666; font-size:12px; border-top:1px solid #eee; box-shadow:0 1px 10px #999; bottom:0; left:0; right:0">

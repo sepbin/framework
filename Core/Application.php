@@ -182,25 +182,28 @@ class Application extends Base implements IFactoryEnable
         
         if( $this->debug ){
             
-            $endtime = explode(' ',microtime());
-            $runtime = $endtime[0]+$endtime[1]-($this->starttime[0]+$this->starttime[1]);
-            $runtime = round($runtime,5);
-            
-            AppInfoView::$app = $this;
-            AppInfoView::$runtime = $runtime;
-            AppInfoView::$runmemory = round( (memory_get_usage() - $this->startmemory)/1024/1024, 3 );
-            
-            if( $this->request->getRequestType() == Request::REQUEST_TYPE_CONSOLE ){
-            	AppInfoView::string();
-            }elseif ( $this->request->getRequestType() == Request::REQUEST_TYPE_POST ){
+            $this->response->bufferOut(function(){
+            	$endtime = explode(' ',microtime());
+            	$runtime = $endtime[0]+$endtime[1]-($this->starttime[0]+$this->starttime[1]);
+            	$runtime = round($runtime,5);
+            	AppInfoView::$app = $this;
+            	AppInfoView::$runtime = $runtime;
+            	AppInfoView::$runmemory = round( (memory_get_usage() - $this->startmemory)/1024/1024, 3 );
             	
-            }else{
-            	AppInfoView::html();
-            }
+            	if( $this->request->getRequestType() == Request::REQUEST_TYPE_CONSOLE ){
+            		AppInfoView::string();
+            	}elseif ( $this->request->getRequestType() == Request::REQUEST_TYPE_POST ){
+            		
+            	}else{
+            		AppInfoView::html();
+            	}
+            });
+            
             
             
         }
         
+        $this->response->flush();
         
     }
     
@@ -271,15 +274,17 @@ class Application extends Base implements IFactoryEnable
      */
     public function exception( $e ){
         
-    	AppExceptionView::$app = $this;
-    	AppExceptionView::$err = $e;
-    	if( $this->request->getRequestType() == Request::REQUEST_TYPE_CONSOLE ){
-    		AppExceptionView::string();
-    	}elseif ( $this->request->getRequestType() == Request::REQUEST_TYPE_POST ){
-    		AppExceptionView::json();
-    	}else{
-    		AppExceptionView::html();
-    	}
+    	$this->response->bufferOut(function(){
+	    	AppExceptionView::$app = $this;
+	    	AppExceptionView::$err = $e;
+	    	if( $this->request->getRequestType() == Request::REQUEST_TYPE_CONSOLE ){
+	    		AppExceptionView::string();
+	    	}elseif ( $this->request->getRequestType() == Request::REQUEST_TYPE_POST ){
+	    		AppExceptionView::json();
+	    	}else{
+	    		AppExceptionView::html();
+	    	}
+    	});
         
         if( isset($this->errHandler[ $e->getCode() ]) ){
             $this->errHandler[ $e->getCode ]( $e->getCode(), $e->getMessage(), $e->getFile(), $e->getLine() );

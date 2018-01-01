@@ -7,8 +7,8 @@ use Sepbin\System\Mvc\Exception\NotFoundException;
 use Sepbin\System\Util\InstanceSet;
 use Sepbin\System\Mvc\Exception\ActionResultErrorException;
 use Sepbin\System\Mvc\Exception\RenderErrorException;
-use Sepbin\System\Mvc\Model\RestfulModel;
-use Sepbin\System\Mvc\View\Render\RestfulRender;
+use Sepbin\System\Mvc\Restful\RestfulModel;
+use Sepbin\System\Mvc\Restful\RestfulViewRender;
 use Sepbin\System\Util\HookRun;
 
 class MvcControl extends Base
@@ -54,7 +54,7 @@ class MvcControl extends Base
 		
 		$this->app = $app;
 		
-		$this->addRender(RestfulModel::class, RestfulRender::class );
+		$this->addRender(RestfulModel::class, RestfulViewRender::class );
 		
 	}
 	
@@ -83,9 +83,9 @@ class MvcControl extends Base
 	/**
 	 * 分派
 	 */
-	public function dispatch() : string{
+	public function dispatch(){
 		
-		$defaultController = 'SepApp\Index\Controller\IndexController';
+		$defaultController = 'SepApp\Application\Index\IndexController';
 		$defaultAction = 'index';
 		
 		
@@ -125,7 +125,7 @@ class MvcControl extends Base
 			
 			$render = new $this->render[ get_class($result) ];
 			
-			if( !$render instanceof Render ){
+			if( !$render instanceof ViewRender ){
 				throw (new RenderErrorException())->appendMsg( $this->render[ get_class($result) ] );
 			}
 			
@@ -133,11 +133,13 @@ class MvcControl extends Base
 			
 		}else{
 			
-			$render = new Render();
+			$render = new ViewRender();
 			
 		}
 		
 		HookRun::void(IMvcHook::class, 'modelRenderBefore', $result);
+		
+		$render->setRouteInfo($this->dispatchClass, $this->dispatchAction);
 		
 		return $render->get($result);
 		

@@ -6,31 +6,56 @@ use Sepbin\System\Core\Base;
 class Model extends Base
 {
 	
-	const AUTO_TYPE_JSON = 'json';
+// 	const AUTO_TYPE_JSON = 'json';
 	
-	const AUTO_TYPE_XML = 'xml';
+// 	const AUTO_TYPE_XML = 'xml';
 	
+// 	/**
+// 	 * 模型的自动渲染类型
+// 	 * 在不符合自定义渲染的条件下，可以把渲染任务交给框架
+// 	 * 框架会按照设置的自动渲染类型渲染model
+// 	 * @var string
+// 	 */
+// 	protected $_auto_data_type = 'json';
+	
+	private $_data = array();
+	
+	
+// 	public function setAutoDataType( string $type ){
+		
+// 		$this->_auto_data_type = $type;
+		
+// 	}
+	
+// 	public function getAutoDataType():string{
+		
+// 		return $this->_auto_data_type;
+		
+// 	}
 	
 	/**
-	 * 模型的自动渲染类型
-	 * 在不符合自定义渲染的条件下，可以把渲染任务交给框架
-	 * 框架会按照设置的自动渲染类型渲染model
-	 * @var string
+	 * 获取模型的原始数据
+	 * @return array
 	 */
-	protected $_auto_data_type = 'json';
-	
-	
-	public function setAutoDataType( string $type ){
+	public function getData() : array{
 		
-		$this->_auto_data_type = $type;
+		return $this->_data;
 		
 	}
 	
-	public function getAutoDataType():string{
+	
+	public function __set($name,$value){
 		
-		return $this->_auto_data_type;
+		$this->_data[$name] = $value;
 		
 	}
+	
+	public function __get($name){
+		
+		if(isset($this->data[$name])) return $this->_data[$name];
+			
+	}
+	
 	
 	
 }

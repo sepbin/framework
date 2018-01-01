@@ -56,13 +56,28 @@ class StringUtil
 	 * @param unknown $name
 	 * @return string
 	 */
-	static public function camelToUnderline($name):string{
+	static public function camelToUnderline(string $name):string{
 		
 		$name = preg_replace('/([A-Z]{1})/','_$1',$name);
 		$name = strtolower($name);
 		$name = ltrim($name,'_');
 		return $name;
 		
+	}
+	
+	
+	/**
+	 * 下划线命名转骆驼式命名
+	 * @param string $name
+	 * @return string
+	 */
+	static public function underlineToCamel(string $name):string{
+		
+		$name = preg_replace_callback('/_([a-z]{1})/', function($matchs){
+			return strtoupper( $matchs[1] );
+		}, $name);
+		
+		return $name;
 	}
 	
 }
