@@ -2,19 +2,20 @@
 namespace Sepbin\System\Mvc;
 
 use Sepbin\System\Mvc\View\Template;
+use Sepbin\System\Mvc\View\TemplateManager;
 
 class ViewRender
 {
 	
 	
-	protected $controller_name;
+	protected $controller;
 	
 	protected $action_name;
 	
 	
-	public function setRouteInfo( string $controller_name, string $action_name ){
+	public function setRouteInfo( AbsController $controller, string $action_name ){
 		
-		$this->controller_name = $controller_name;
+		$this->controller = $controller;
 		
 		$this->action_name = $action_name;
 		
@@ -52,7 +53,7 @@ class ViewRender
 	 */
 	protected function getTemplateContent( array $data ): string {
 		
-		$template = new Template($this->controller_name, $this->action_name, $data);
+		$template = new TemplateManager($this->controller, $this->action_name, $data);
 		
 		return $template->getContent();
 		

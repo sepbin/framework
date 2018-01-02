@@ -4,8 +4,11 @@ namespace Sepbin\System\Http;
 use Sepbin\System\Core\Base;
 use Sepbin\System\Core\Application;
 use Sepbin\System\Util\Data\ArrayXML;
+use Sepbin\System\Util\IFactoryEnable;
+use Sepbin\System\Util\FactoryConfig;
+use Sepbin\System\Util\Factory;
 
-class Response extends Base
+class Response extends Base implements IFactoryEnable
 {
 	
 	
@@ -25,7 +28,7 @@ class Response extends Base
 	 * 响应编码
 	 * @var string
 	 */
-	private $charset = 'utf8';
+	public $charset = 'utf8';
 	
 	
 	/**
@@ -33,7 +36,7 @@ class Response extends Base
 	 * private、no-cache、max-age、must-revalidate
 	 * @var string
 	 */
-	private $cacheControl = 'no-cache';
+	public $cacheControl = 'no-cache';
 	
 	
 	/**
@@ -60,10 +63,38 @@ class Response extends Base
 	private $buffer = array();
 	
 	
-	function __construct( Application $app ){
+	
+	static public function getInstance( string $config_namespace=null, string $config_file=null, string $config_path=CONFIG_DIR ):Response{
+		
+		return Factory::get( Response::class, $config_namespace, $config_file,$config_path );
+		
+	}
+	
+	
+	static public function _factory( FactoryConfig $config ) : IFactoryEnable{
+		
+		$response = new Response();
+		
+		//$response->charset = $config->getStr('charset','utf8');
+		
+		$response->cacheControl = $config->getStr('cache_control','no-cache');
+		
+		$ext = $config->getStr('content_type','html');
+		$response->setContentType( $ext );
+		
+		if($config->check('expire')){
+			$response->expire = $config->getInt('expire');
+		}
+		
+		return $response;
+		
+	}
+	
+	public function _init(){
+		
+		$this->charset = getApp()->charset;
 		
 		ob_start();
-		
 	}
 	
 	
@@ -108,12 +139,16 @@ class Response extends Base
 	 * @return string
 	 */
 	public function bufferOut(\Closure $func):void{
-		ob_start();
-		$func();
-		$this->put( ob_get_contents() );
-		ob_clean();
+		$this->put( $this->getOut($func) );
 	}
 	
+	public function getOut(\Closure $func):string{
+		ob_start();
+		$func();
+		$out = ob_get_contents();
+		ob_clean();
+		return $out;
+	}
 	
 	/**
 	 * 输出缓冲

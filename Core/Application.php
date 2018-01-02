@@ -18,11 +18,43 @@ use Sepbin\System\Util\Factory;
 class Application extends Base implements IFactoryEnable
 {
     
+	
+	
 	private $debug = true;
+	
+	
+	/**
+	 * 时区
+	 * @var string
+	 */
+	public $dateTimezone;
+	
+	
+	
+	/**
+	 * 默认语言
+	 * @var string
+	 */
+	public $defaultLang;
+	
+	
+	/**
+	 * 当前语言
+	 * @var string
+	 */
+	public $language;
+	
+	
+	public $charset;
+	
+	
+	
 	
     private $process = array();
     
+    
     private $errHandler = array();
+    
     
     private $hook = array();
     
@@ -53,48 +85,58 @@ class Application extends Base implements IFactoryEnable
     
     static public function _factory( FactoryConfig $config ) : IFactoryEnable{
     	
-    	$app = new Application( $config->getBool('debug',true) );
+    	$app = new Application();
+    	$app->debug = $config->getBool('debug',true);
+    	$app->charset = $config->getStr('charset','utf8');
     	
+    	if( $config->check('timezone') ){
+    		$app->dateTimezone = $config->getStr('timezone');
+    	}
+    	
+    	if( $config->check('language') ){
+    		$app->defaultLang = $config->getStr('language','zh-CN');
+    		$app->language = $app->defaultLang;
+    	}
     	
     	return $app;
     	
     }
     
     
-    
-    function __construct( bool $debug=true ){
+    public function _init(){
     	
-    	$this->debug = $debug;
+    	if( $this->debug ){
+    		$this->starttime = explode(' ',microtime());
+    		$this->startmemory = memory_get_usage();
+    	}
     	
-        
-        if( $this->debug ){
-            $this->starttime = explode(' ',microtime());
-            $this->startmemory = memory_get_usage();
-        }
-        
-        set_error_handler(array($this,'error'));
-        set_exception_handler(array($this,'exception'));
-        
-        
-        $this->request = new Request( $this );
-        $this->response = new Response( $this );
-        
-        
+    	$this->request = new Request();
+    	$this->response = Response::getInstance('application.response');
+    	
+    	set_error_handler(array($this,'error'));
+    	set_exception_handler(array($this,'exception'));
+    	
+    	
     }
-    
     
     
     
     /**
      * 注册钩子
+     * @param string $interface_name  接口名称
+     * @param string|object $hook_name_or_instance	注册的类名或实例
      */
-    public function registerHook( string $name, string $hook_name ) {
+    public function registerHook( string $interface_name, $hook_name_or_instance ): void {
         
-    	if( isset($this->hook[$name]) && in_array($hook_name, $this->hook[$name]) ){
-    		throw (new RepeatHookException() )->appendMsg( $name.' -> '.$hook_name );
+    	if( isset($this->hook[$interface_name]) 
+    			&& is_string($hook_name_or_instance) 
+    			&& in_array($hook_name_or_instance, $this->hook[$interface_name]) ){
+    		
+    		throw (new RepeatHookException() )->appendMsg( $interface_name.' -> '.$hook_name_or_instance );
+    		
     	}
     	
-    	$this->hook[ $name ][] = $hook_name;
+    	$this->hook[ $interface_name ][] = $hook_name_or_instance;
     	
     }
     
@@ -140,7 +182,11 @@ class Application extends Base implements IFactoryEnable
     	
     	foreach ( $this->hook[$name] as $item ){
     		
-    		$set->add( $instanceManager->get($item) );
+    		if( is_string($item) ){
+    			$set->add( $instanceManager->get($item) );
+    		}else{
+    			$set->add( $item );	
+    		}
     		
     	}
     	
@@ -160,7 +206,21 @@ class Application extends Base implements IFactoryEnable
         $this->process[] = $func;
         
     }
+
     
+    private function setLang(){
+    	
+    	date_default_timezone_set( $this->dateTimezone );
+    	setlocale(LC_ALL, $this->language.'.'.$this->charset);
+    	putenv("LANGUAGE=".$this->language.'.'.$this->charset);
+    	
+    	/**
+    	 * 绑定公共语言库
+    	 */
+    	bindtextdomain('Application', APP_DIR.'/Locale');
+    	bind_textdomain_codeset('Application', getApp()->charset);
+    	
+    }
     
     
     /**
@@ -171,6 +231,7 @@ class Application extends Base implements IFactoryEnable
     	
     	$this->hook(IApplicationHook::class, 'applicationStart', InstanceSet::CALL_VOID, $this );
         
+    	$this->setLang();  
     	
         if( !empty($this->process) ){
             foreach ($this->process as $item){
@@ -240,15 +301,15 @@ class Application extends Base implements IFactoryEnable
             
             case E_USER_ERROR:
                 
-                AppInfo::Record($errno, '致命错误', $errstr." [$errfile( line $errline )]");
+                AppInfo::Record($errno, '错误', $errstr." [$errfile( line $errline )]");
                 break;
                 
             case E_USER_WARNING:
-                AppInfo::Record($errno, '警告信息', $errstr." [$errfile( line $errline )]");
+                AppInfo::Record($errno, '警告', $errstr." [$errfile( line $errline )]");
                 break;
                 
             case E_USER_NOTICE:
-                AppInfo::Record($errno, '通知信息', $errstr." [$errfile( line $errline )]");
+                AppInfo::Record($errno, '通知', $errstr." [$errfile( line $errline )]");
                 break;
                 
             case E_WARNING:
@@ -273,19 +334,21 @@ class Application extends Base implements IFactoryEnable
      * 应用异常
      */
     public function exception( $e ){
-        
-    	$this->response->bufferOut(function() use ($e){
-	    	AppExceptionView::$app = $this;
-	    	AppExceptionView::$err = $e;
-	    	if( $this->request->getRequestType() == Request::REQUEST_TYPE_CONSOLE ){
-	    		AppExceptionView::string();
-	    	}elseif ( $this->request->getRequestType() == Request::REQUEST_TYPE_POST ){
-	    		AppExceptionView::json();
-	    	}else{
-	    		AppExceptionView::html();
-	    	}
-    	});
-        
+    	
+	    $this->response->bufferOut(function() use ($e){
+		    AppExceptionView::$app = $this;
+		    AppExceptionView::$err = $e;
+		    if( $this->request->getRequestType() == Request::REQUEST_TYPE_CONSOLE ){
+		    	AppExceptionView::string();
+		    }elseif ( $this->request->getRequestType() == Request::REQUEST_TYPE_POST ){
+		    	AppExceptionView::json();
+		    }else{
+		    	AppExceptionView::html();
+		    }
+	    });
+	    	
+    	
+    	
         if( isset($this->errHandler[ $e->getCode() ]) ){
             $this->errHandler[ $e->getCode ]( $e->getCode(), $e->getMessage(), $e->getFile(), $e->getLine() );
         }

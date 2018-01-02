@@ -12,30 +12,28 @@ use Sepbin\System\Mvc\Restful\RestfulViewRender;
 use Sepbin\System\Util\HookRun;
 use Sepbin\System\Mvc\Auto\AbsAutoController;
 use Sepbin\System\Mvc\Auto\AutoViewRender;
+use Sepbin\System\Util\IFactoryEnable;
+use Sepbin\System\Util\Factory;
+use Sepbin\System\Mvc\Hook\IMvcModelHook;
+use Sepbin\System\Mvc\Hook\IMvcRenderHook;
 
-class MvcControl extends Base
+class MvcControl extends Base implements IFactoryEnable
 {
 	
-	/**
-	 * 
-	 * @var Application
-	 */
-	private $app;
 	
 	/**
 	 * 要分派的类型名称
 	 * 一般不要设置，将由route来指定
 	 * @var string
 	 */
-	public $dispatchClass;
-	
+	public $dispatchClass = 'SepApp\Application\Index\IndexController';
 	
 	/**
 	 * 要分派的方法名称
 	 * 一般不要设置，将由route来指定
 	 * @var string
 	 */
-	public $dispatchAction;
+	public $dispatchAction = 'index';
 	
 	
 	/**
@@ -52,9 +50,47 @@ class MvcControl extends Base
 	private $render = array();
 	
 	
-	function __construct( Application $app ){
+	
+	static public function getInstance( string $config_namespace=null, string $config_file=null, string $config_path=CONFIG_DIR ){
 		
-		$this->app = $app;
+		return Factory::get(MvcControl::class, $config_namespace, $config_file);
+		
+	}
+	
+	static public function _factory( \Sepbin\System\Util\FactoryConfig $config ) : IFactoryEnable{
+		
+		$instance = new MvcControl();
+		
+		if( $config->check('default_controller') ){
+			$instance->dispatchClass = $config->getStr('default_controller');
+		}
+		
+		if( $config->check('default_action') ){
+			$instance->dispatchAction = $config->getStr('default_action');
+		}
+		
+		
+		if( $config->check('route') ){
+			foreach ($config->getArrStr('route') as $item){
+				$instance->addRoute( new $item );
+			}
+		}
+		
+		if( $config->check('render') ){
+			
+			foreach ( $config->getArrStr('render') as $key => $item ){
+				$instance->addRender($key, $item);
+			}
+			
+		}
+		
+		return $instance;
+		
+	}
+	
+	
+	
+	public function _init(){
 		
 		$this->addRender(RestfulModel::class, RestfulViewRender::class );
 		
@@ -87,9 +123,6 @@ class MvcControl extends Base
 	 */
 	public function dispatch(){
 		
-		$defaultController = 'SepApp\Application\Index\IndexController';
-		$defaultAction = 'index';
-		
 		
 		//把路由加入到一个集合，设置集合为一个隧道模式
 		$set = new InstanceSet(AbsRoute::class, InstanceSet::CALL_TUNNEL);
@@ -98,7 +131,7 @@ class MvcControl extends Base
 		}
 		
 		//设置当前的路由
-		$this->dispatchClass = $set->_findController( $defaultController );
+		$this->dispatchClass = $set->_findController( $this->dispatchClass );
 		
 		try {
 			$instance = new $this->dispatchClass;
@@ -107,7 +140,7 @@ class MvcControl extends Base
 		}
 		
 		//设置当前的执行方法
-		$this->dispatchAction = $set->_findAction( $defaultAction, $instance );
+		$this->dispatchAction = $set->_findAction( $this->dispatchAction, $instance );
 		
 		$methodName = $this->getActionName();
 		
@@ -131,25 +164,21 @@ class MvcControl extends Base
 				throw (new RenderErrorException())->appendMsg( $this->render[ get_class($result) ] );
 			}
 			
-			
-			
 		}else{
 			
-			if( $instance instanceof AbsAutoController ){
-				$render = new AutoViewRender();
-			}else{
-				$render = new ViewRender();
-			}
+			$renderName = HookRun::tunnel(IMvcRenderHook::class, 'renderCreateBefore', ViewRender::class,$instance,$this->dispatchAction);
+			$render = new $renderName();
 			
 		}
 		
-		HookRun::void(IMvcHook::class, 'modelRenderBefore', $result);
+		HookRun::void(IMvcModelHook::class, 'modelRenderBefore', $result);
 		
-		$render->setRouteInfo($this->dispatchClass, $this->dispatchAction);
+		$render->setRouteInfo($instance, $this->dispatchAction);
 		
 		return $render->get($result);
 		
 	}
+	
 	
 	private function getActionName():string{
 		

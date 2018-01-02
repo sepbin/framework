@@ -5,13 +5,16 @@ namespace Sepbin\System\Mvc\Restful;
 use Sepbin\System\Mvc\AbsController;
 use Sepbin\System\Mvc\Model;
 use Sepbin\System\Http\Response;
+use Sepbin\System\Mvc\Hook\IMvcRenderHook;
 
 
-abstract class AbsRestfulController extends AbsController
+abstract class AbsRestfulController extends AbsController 
 {
 	
 	
 	protected $autoDataType = Response::DATA_TYPE_JSON;
+	
+	
 	
 	
 	function __destruct(){
@@ -30,6 +33,7 @@ abstract class AbsRestfulController extends AbsController
 		return new RestfulModel();
 		
 	}
+	
 	
 	
 }

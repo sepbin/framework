@@ -3,7 +3,6 @@ namespace Sepbin\System\Http;
 
 use Sepbin\System\Core\Base;
 use Sepbin\System\Util\InstanceSet;
-use Sepbin\System\Core\Application;
 
 class Request extends Base
 {
@@ -59,6 +58,13 @@ class Request extends Base
 	 */
 	private $requestHttpMethod;
 	
+	
+	/**
+	 * 请求语言
+	 * @var string
+	 */
+	public $requestLang;
+	
 	/**
 	 * 请求参数
 	 * @var RequestParam
@@ -66,13 +72,13 @@ class Request extends Base
 	public $param;
 	
 	
-	function __construct( Application $app ){
+	function __construct(){
 		
-		$app->registerHook(IRequestSpotTypeHook::class, RequestSpotTypeDefault::class);
+		getApp()->registerHook(IRequestSpotTypeHook::class, RequestSpotTypeDefault::class);
 		
 		$this->spotHttpMethod();
 		
-		$this->requestType = $app->hook(IRequestSpotTypeHook::class, 'spot', InstanceSet::CALL_TUNNEL, self::REQUEST_TYPE_BROSWER, $this);
+		$this->requestType = getApp()->hook(IRequestSpotTypeHook::class, 'spot', InstanceSet::CALL_TUNNEL, self::REQUEST_TYPE_BROSWER, $this);
 		
 		if ($this->requestHttpMethod == self::REQUEST_HTTP_POST){
 			$this->param = new RequestParam( $_GET, $_POST, $_FILES );
@@ -80,6 +86,7 @@ class Request extends Base
 			$this->param = new RequestParam( $_GET );
 		}
 		
+		$this->requestLang = getApp()->defaultLang;
 		
 	}
 	

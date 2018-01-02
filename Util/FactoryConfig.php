@@ -23,5 +23,11 @@ class FactoryConfig extends AbsGetType
 		
 	}
 	
+	public function check( string $name ){
+		
+		return isset($this->config[$name]);
+		
+	}
+	
 	
 }

@@ -4,6 +4,7 @@ namespace Sepbin\System\Core;
 interface IApplicationHook
 {
 	
+	
 	public function applicationStart( Application $app ) :void;
 	
 	public function applicationEnd( Application $app ):void;
