@@ -10,16 +10,9 @@ class BasicSyntax
 	 */
 	protected $manager;
 	
+	
 	protected $content;
 	
-	
-	
-	/**
-	 * 嵌入的父级文件
-	 * 此属性用于防止include死循环
-	 * @var array
-	 */
-	private $parentFilenames = array();
 	
 	
 	
@@ -35,31 +28,7 @@ class BasicSyntax
 	}
 	
 	
-	public function setParentFilenames( array $filenames ){
-		$this->parentFilenames = $filenames;
-	}
-	
-	/**
-	 * 检查是否包含父级文件
-	 * @param string $include_file
-	 */
-	protected function checkIncludeLoop( string $include_file ){
-		
-		if( in_array($include_file, $this->parentFilenames) ){
-			
-			
-			trigger_error('陷入include死循环 '.$this->parentFilenames[ count($this->parentFilenames)-1 ].'试图include '.$include_file,E_USER_ERROR);
-			return false;
-			
-		}
-		
-		return true;
-		
-	}
-	
-	
 	protected function parse(){}
-	
 	
 	
 	
@@ -75,27 +44,21 @@ class BasicSyntax
 		}, $this->content);
 		
 		
+		//解析layout的content标记
+		$this->content = preg_replace_callback('/<!--#content-->/', function($matches){
+				
+			return $this->phpTag(' $this->includeContent() ');
+				
+		},$this->content);
+		
+		
 		//解析嵌入语法
 		$this->content = preg_replace_callback('/<!--#include\s*(.+)?\s*?-->/', function($matches){
 			
 			$filename = $this->manager->styleDir.'/'.$matches[1];
+			$filename = trim($filename);
 			
-			if( !file_exists($filename) ){
-				
-				trigger_error('没有找到要嵌入的文件 '.$filename, E_USER_ERROR);
-				
-			}elseif( $this->checkIncludeLoop( $filename ) ){
-				
-				
-				$syntax = new BasicSyntax($this->manager, file_get_contents($filename));
-				
-				$syntax->setParentFilenames( array_merge( $this->parentFilenames, [$filename] ) );
-				
-				return $matches[0]."\n".$syntax->getContent()."\n<!--#include end-->";
-				
-			}
-			
-			return '\n<!--#include end-->';
+			return "\n".$matches[0]."\n".$this->phpTag('$this->includeContent( \''.$filename.'\' )')."\n\n<!--include end-->\n";
 			
 		}, $this->content);
 		
@@ -105,6 +68,7 @@ class BasicSyntax
 			return $this->manager->controller->_t( trim($matches[1]) );
 			
 		}, $this->content);
+		
 		
 		//代码注释
 		$this->content = preg_replace('/<!--#notes.+?-->/s', '<!--notes code-->', $this->content);
@@ -132,6 +96,13 @@ class BasicSyntax
 		$this->after();
 		
 		return $this->content;
+		
+	}
+	
+	
+	protected function phpTag(string $str):string{
+		
+		return "<?php $str ?>";
 		
 	}
 	

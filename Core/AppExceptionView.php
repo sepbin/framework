@@ -64,6 +64,10 @@ class AppExceptionView extends Base
                 		    
                 		}
                 		
+                		foreach ($t['args'] as $k=>$v){
+                			$t['args'][$k] = htmlspecialchars($v);
+                		}
+                		
                 		echo implode(', ', $t['args']).')';
                 		?>
         			</td>

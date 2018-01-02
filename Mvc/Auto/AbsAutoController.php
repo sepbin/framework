@@ -39,6 +39,7 @@ abstract class AbsAutoController extends AbsController implements IMvcRenderHook
 		if( $controller instanceof AbsAutoController ){
 			return AutoViewRender::class;
 		}
+		
 		return $render_name;
 		
 	}

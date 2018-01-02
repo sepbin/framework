@@ -335,6 +335,8 @@ class Application extends Base implements IFactoryEnable
      */
     public function exception( $e ){
     	
+    	//ob_clean();
+    	
 	    $this->response->bufferOut(function() use ($e){
 		    AppExceptionView::$app = $this;
 		    AppExceptionView::$err = $e;

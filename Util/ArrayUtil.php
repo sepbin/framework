@@ -26,7 +26,7 @@ class ArrayUtil
                 if (is_string($value)){
                     $appContent.= '\''.$value.'\',';
                 }elseif (is_array($value)){
-                    $appContent.= self::ParseArrayToString($value).',';
+                    $appContent.= self::toExpString($value).',';
                 }elseif (is_numeric($value)) {
                     $appContent.= $value.',';
                 }elseif (is_bool($value)){
