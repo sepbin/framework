@@ -34,5 +34,11 @@ class RequestParam extends AbsGetType
 		
 	}
 	
+	public function put( string $name, $value ){
+		
+		$this->param[$name] = $value;
+		
+	}
+	
 	
 }

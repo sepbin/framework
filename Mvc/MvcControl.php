@@ -4,20 +4,21 @@ namespace Sepbin\System\Mvc;
 use Sepbin\System\Core\Base;
 use Sepbin\System\Core\Application;
 use Sepbin\System\Mvc\Exception\NotFoundException;
-use Sepbin\System\Util\InstanceSet;
 use Sepbin\System\Mvc\Exception\ActionResultErrorException;
 use Sepbin\System\Mvc\Exception\RenderErrorException;
 use Sepbin\System\Mvc\Restful\RestfulModel;
 use Sepbin\System\Mvc\Restful\RestfulViewRender;
 use Sepbin\System\Util\HookRun;
-use Sepbin\System\Mvc\Auto\AbsAutoController;
-use Sepbin\System\Mvc\Auto\AutoViewRender;
 use Sepbin\System\Util\IFactoryEnable;
 use Sepbin\System\Util\Factory;
 use Sepbin\System\Mvc\Hook\IMvcModelHook;
 use Sepbin\System\Mvc\Hook\IMvcRenderHook;
+use Sepbin\System\Core\IRouteEnable;
+use Sepbin\System\Util\StringUtil;
+use Sepbin\System\Mvc\Auto\ResultModel;
+use Sepbin\System\Mvc\Auto\ResultViewRender;
 
-class MvcControl extends Base implements IFactoryEnable
+class MvcControl extends Base implements IFactoryEnable, IRouteEnable
 {
 	
 	
@@ -36,11 +37,9 @@ class MvcControl extends Base implements IFactoryEnable
 	public $dispatchAction = 'index';
 	
 	
-	/**
-	 * 使用的路由
-	 * @var AbsRoute[]
-	 */
-	private $route = array();
+	public $module = 'Index' ;
+	
+	public $controller = 'Index';
 	
 	
 	/**
@@ -50,61 +49,60 @@ class MvcControl extends Base implements IFactoryEnable
 	private $render = array();
 	
 	
-	
 	static public function getInstance( string $config_namespace=null, string $config_file=null, string $config_path=CONFIG_DIR ){
 		
 		return Factory::get(MvcControl::class, $config_namespace, $config_file);
 		
 	}
 	
-	static public function _factory( \Sepbin\System\Util\FactoryConfig $config ) : IFactoryEnable{
+	
+	public function _init( \Sepbin\System\Util\FactoryConfig $config ){
 		
-		$instance = new MvcControl();
 		
 		if( $config->check('default_controller') ){
-			$instance->dispatchClass = $config->getStr('default_controller');
+			$this->dispatchClass = $config->getStr('default_controller');
 		}
 		
 		if( $config->check('default_action') ){
-			$instance->dispatchAction = $config->getStr('default_action');
+			$this->dispatchAction = $config->getStr('default_action');
 		}
 		
-		
-		if( $config->check('route') ){
-			foreach ($config->getArrStr('route') as $item){
-				$instance->addRoute( new $item );
-			}
-		}
 		
 		if( $config->check('render') ){
 			
 			foreach ( $config->getArrStr('render') as $key => $item ){
-				$instance->addRender($key, $item);
+				$this->addRender($key, $item);
 			}
 			
 		}
 		
-		return $instance;
-		
-	}
-	
-	
-	
-	public function _init(){
-		
 		$this->addRender(RestfulModel::class, RestfulViewRender::class );
+		$this->addRender(ResultModel::class, ResultViewRender::class);
 		
 	}
+	
 	
 	/**
-	 * 加入路由实例
-	 * @param AbsRoute $route
+	 * 实现路由回调
+	 * {@inheritDoc}
+	 * @see \Sepbin\System\Core\IRouteEnable::RouteMapper()
 	 */
-	public function addRoute( AbsRoute $route ){
+	public function RouteMapper( array $params ){
 		
-		$this->route[] = $route;
+		if( !empty($params['module']) && !empty($params['controller']) ){
+			$this->module = ucfirst( StringUtil::underlineToCamel( $params['module'] ) );
+			$this->controller = ucfirst( StringUtil::underlineToCamel($params['controller']) );
+			$this->dispatchClass = 'SepApp\Application\\'.$this->module .'\\'.$this->controller.'Controller' ;
+		}
+		
+		if(!empty($params['action'])){
+			$this->dispatchAction = $params['action'];
+		}
+		
+		dump( $this->dispatch() );
 		
 	}
+	
 	
 	
 	/**
@@ -124,23 +122,18 @@ class MvcControl extends Base implements IFactoryEnable
 	public function dispatch(){
 		
 		
-		//把路由加入到一个集合，设置集合为一个隧道模式
-		$set = new InstanceSet(AbsRoute::class, InstanceSet::CALL_TUNNEL);
-		foreach ($this->route as $item){
-			$set->add( $item );
-		}
-		
-		//设置当前的路由
-		$this->dispatchClass = $set->_findController( $this->dispatchClass );
-		
 		try {
+			/**
+			 * 
+			 * @var AbsController $instance
+			 */
 			$instance = new $this->dispatchClass;
 		}catch (\Error $e){
 			throw (new NotFoundException())->appendMsg( 'class : '. $this->dispatchClass );
 		}
 		
-		//设置当前的执行方法
-		$this->dispatchAction = $set->_findAction( $this->dispatchAction, $instance );
+		$instance->moduleName = $this->module;
+		$instance->controllerName = $this->controller;
 		
 		$methodName = $this->getActionName();
 		

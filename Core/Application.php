@@ -9,6 +9,8 @@ use Sepbin\System\Util\InstanceManager;
 use Sepbin\System\Util\IFactoryEnable;
 use Sepbin\System\Util\FactoryConfig;
 use Sepbin\System\Util\Factory;
+use Sepbin\System\Core\Exception\RouteDelegateException;
+use Sepbin\System\Core\Exception\NotFoundException;
 
 /**
  * 应用入口
@@ -49,7 +51,6 @@ class Application extends Base implements IFactoryEnable
 	
 	
 	
-	
     private $process = array();
     
     
@@ -83,27 +84,19 @@ class Application extends Base implements IFactoryEnable
         
     }
     
-    static public function _factory( FactoryConfig $config ) : IFactoryEnable{
+    public function _init( FactoryConfig $config ){
     	
-    	$app = new Application();
-    	$app->debug = $config->getBool('debug',true);
-    	$app->charset = $config->getStr('charset','utf8');
+    	$this->debug = $config->getBool('debug',true);
+    	$this->charset = $config->getStr('charset','utf8');
     	
     	if( $config->check('timezone') ){
-    		$app->dateTimezone = $config->getStr('timezone');
+    		$this->dateTimezone = $config->getStr('timezone');
     	}
     	
     	if( $config->check('language') ){
-    		$app->defaultLang = $config->getStr('language','zh-CN');
-    		$app->language = $app->defaultLang;
+    		$this->defaultLang = $config->getStr('language','zh-CN');
+    		$this->language = $this->defaultLang;
     	}
-    	
-    	return $app;
-    	
-    }
-    
-    
-    public function _init(){
     	
     	if( $this->debug ){
     		$this->starttime = explode(' ',microtime());
@@ -138,14 +131,6 @@ class Application extends Base implements IFactoryEnable
     	
     	$this->hook[ $interface_name ][] = $hook_name_or_instance;
     	
-    }
-    
-    
-    /**
-     * 注册服务
-     */
-    public function registerService(){
-         
     }
     
     
@@ -196,17 +181,25 @@ class Application extends Base implements IFactoryEnable
     	
     }
     
-    /**
-     * 运行过程
-     * @param \Closure $func  运行的匿名函数
-     * @return void
-     */
-    public function process( \Closure $func ){
-        
-        $this->process[] = $func;
-        
+    
+    public function registerLib( $namespace_pre, $dir ){
+    	
+    	_registerLib($namespace_pre, $dir);
+    	
     }
-
+    
+    private $rules = array();
+    
+    
+    public function addHttpRoute($rule, $delegate, $params = array() ){
+    	
+    	$this->rules[$rule] = array(
+    		'delegate' => $delegate,
+    		'params' => $params
+    	);
+    	
+    }
+    
     
     private function setLang(){
     	
@@ -223,6 +216,51 @@ class Application extends Base implements IFactoryEnable
     }
     
     
+    private function match( $rule, $path ){
+    	
+    	$result = array();
+    	
+    	if($rule == '') return $result;
+    	
+    	if( substr($rule, 0, 7) == 'host://' ){
+    		$host = $_SERVER['HTTP_HOST'];
+    	}else{
+    		$host = substr( $rule , 0, strpos($rule, '://'));
+    	}
+    	if($host != $_SERVER['HTTP_HOST']) return false;
+    	
+    	$rule = substr($rule, strpos($rule, '://')+3);
+    	
+    	if($rule == '' && $path == '') return $result;
+    	elseif($rule == '') return false;
+    	
+    	$ruleTmp = explode('/', $rule);
+    	$pathTmp = explode('/', $path);
+    	
+    	if( count($ruleTmp) != count($pathTmp) ) return false;
+    	
+    	
+    	
+    	for( $i = 0; $i<count($ruleTmp); $i++ ){
+    		if( strpos($ruleTmp[$i], '{') !== false && strrpos($ruleTmp[$i], '}') !== false ){
+    			
+    			$paramKey = substr($ruleTmp[$i], 1, strrpos($ruleTmp[$i], '}') - 1);
+    			$this->request->param->put($paramKey, $pathTmp[$i]);
+    			$result[ $paramKey ] = $pathTmp[$i];
+    			
+    		}elseif ($ruleTmp[$i] != $pathTmp[$i]){
+    			
+    			return false;
+    		}
+    	}
+    	
+    	return $result;
+    	
+    }
+    
+    
+    
+    
     /**
      * 开始运行
      * @return null
@@ -231,15 +269,54 @@ class Application extends Base implements IFactoryEnable
     	
     	$this->hook(IApplicationHook::class, 'applicationStart', InstanceSet::CALL_VOID, $this );
         
+    	
+    	
     	$this->setLang();  
     	
-        if( !empty($this->process) ){
-            foreach ($this->process as $item){
-                $item();
-            }
-        }
+    	$path = $_SERVER['REQUEST_URI'];
+    	$path = substr($path, strlen(HTTP_ROOT));
+    	$path = str_replace('/index.php', '', $path);
+    	$path = ltrim($path,'/');
+    	
+    	$isFind = false;
+    	
+		foreach ( $this->rules as $rule => $run ){
+			if( false !== ($result = $this->match( $rule , $path ) ) ){
+				
+				if( is_callable($run['delegate']) ){
+					
+					$isFind = true;
+					$run['delegate']();
+					
+				}elseif (!empty($run['delegate'])){
+					
+					$isFind = true;
+					$delegate = Factory::getForString($run['delegate']);
+					
+					if( !$delegate instanceof IRouteEnable ){
+						throw ( new RouteDelegateException() )->appendMsg($run['delegate']);
+					}
+					
+					if(!empty($run['params'])){
+						$result = array_merge($result, $run['params']);
+					}
+					
+					$delegate->RouteMapper( $result );
+					
+				}
+				break;
+				
+			}
+		}
+		
+		if(!$isFind && !empty($this->rules)){
+			throw new NotFoundException();
+		}
         
+		
         $this->hook(IApplicationHook::class, 'applicationEnd', InstanceSet::CALL_VOID, $this );
+        
+        
         
         if( $this->debug ){
             

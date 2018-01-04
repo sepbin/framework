@@ -12,7 +12,6 @@ class Response extends Base implements IFactoryEnable
 {
 	
 	
-	
 	const DATA_TYPE_HTML = 'html';
 	
 	const DATA_TYPE_XML = 'xml';
@@ -63,7 +62,6 @@ class Response extends Base implements IFactoryEnable
 	private $buffer = array();
 	
 	
-	
 	static public function getInstance( string $config_namespace=null, string $config_file=null, string $config_path=CONFIG_DIR ):Response{
 		
 		return Factory::get( Response::class, $config_namespace, $config_file,$config_path );
@@ -71,26 +69,17 @@ class Response extends Base implements IFactoryEnable
 	}
 	
 	
-	static public function _factory( FactoryConfig $config ) : IFactoryEnable{
+	
+	public function _init( FactoryConfig $config ){
 		
-		$response = new Response();
-		
-		//$response->charset = $config->getStr('charset','utf8');
-		
-		$response->cacheControl = $config->getStr('cache_control','no-cache');
+		$this->cacheControl = $config->getStr('cache_control','no-cache');
 		
 		$ext = $config->getStr('content_type','html');
-		$response->setContentType( $ext );
+		$this->setContentType( $ext );
 		
 		if($config->check('expire')){
-			$response->expire = $config->getInt('expire');
+			$this->expire = $config->getInt('expire');
 		}
-		
-		return $response;
-		
-	}
-	
-	public function _init(){
 		
 		$this->charset = getApp()->charset;
 		

@@ -1,6 +1,8 @@
 <?php
 namespace Sepbin\System\Util;
 
+use Sepbin\System\Util\Exception\FactoryTypeException;
+
 class Factory
 {
 	
@@ -16,7 +18,6 @@ class Factory
 		}
 		
 		
-		
 		if( $config_namespace == null ){
 			
 			$config_namespace = '____default____';
@@ -27,10 +28,20 @@ class Factory
 		
 		if( !isset( self::$scheme[ $name ][ $config_namespace ] ) ){
 			
+			if( !ConfigUtil::getInstance()->checkNamespace($config_namespace) ){
+				trigger_error('代码中声明却缺少命名空间为'.$config_namespace.'的配置',E_USER_WARNING);
+			}
+			
 			$config = new FactoryConfig( ConfigUtil::getInstance()->getNamespace($config_namespace) );
 			
-			self::$scheme[ $name ][ $config_namespace ] = $name::_factory( $config );
-			self::$scheme[ $name ][ $config_namespace ]->_init();
+			
+			self::$scheme[ $name ][ $config_namespace ] = new $name();
+			
+			if( !self::$scheme[ $name ][ $config_namespace ] instanceof IFactoryEnable ){
+				throw (new FactoryTypeException())->appendMsg( $name );
+			}
+			
+			self::$scheme[ $name ][ $config_namespace ]->_init($config);
 			
 			
 		}
@@ -38,6 +49,23 @@ class Factory
 		return self::$scheme[ $name ][ $config_namespace ];
 			
 		
+	}
+	
+	
+	static public function getForString( $condition ){
+		
+		$tmp = explode(':', $condition);
+		if( count($tmp) == 1 ){
+			return self::get($tmp[0]);
+		}
+		
+		if( count($tmp) == 2 ){
+			return self::get($tmp[0], $tmp[1]);
+		}
+		
+		if( count($tmp) == 3 ){
+			return self::get($tmp[0], $tmp[1], $tmp[2]);
+		}
 		
 	}
 	

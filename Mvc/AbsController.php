@@ -7,21 +7,13 @@ use Sepbin\System\Core\Base;
 abstract class AbsController extends Base
 {
 	
-	private $moduleName;
+	public $moduleName;
 	
-	private $controllerName;
+	public $controllerName;
 	
 	protected $lang;
 	
 	function __construct(){
-		
-		$controller_name = get_class($this);
-		$controller_name = ltrim($controller_name,'SepApp\Application');
-		$controller_name = rtrim($controller_name,'Controller');
-		
-		$controller_name = explode('\\', $controller_name);
-		$this->moduleName = $controller_name[0];
-		$this->controllerName = $controller_name[1];
 		
 		$this->setLang();
 		
@@ -37,7 +29,8 @@ abstract class AbsController extends Base
 		
 	}
 	
-	protected function setLang(){
+	
+	private function setLang(){
 		
 		bindtextdomain($this->getModuleName(), APP_DIR.'/Locale');
 		bind_textdomain_codeset($this->getModuleName(), getApp()->charset);
