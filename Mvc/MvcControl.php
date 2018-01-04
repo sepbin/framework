@@ -51,6 +51,8 @@ class MvcControl extends Base implements IFactoryEnable, IRouteEnable
 	
 	static public function getInstance( string $config_namespace=null, string $config_file=null, string $config_path=CONFIG_DIR ){
 		
+		if($config_namespace == null) $config_namespace = 'mvc';
+		
 		return Factory::get(MvcControl::class, $config_namespace, $config_file);
 		
 	}
@@ -134,6 +136,8 @@ class MvcControl extends Base implements IFactoryEnable, IRouteEnable
 		
 		$instance->moduleName = $this->module;
 		$instance->controllerName = $this->controller;
+		
+		$instance->_init();
 		
 		$methodName = $this->getActionName();
 		

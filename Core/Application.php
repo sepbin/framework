@@ -50,6 +50,9 @@ class Application extends Base implements IFactoryEnable
 	public $charset;
 	
 	
+	public $httpRewrite = false;
+	
+	
 	
     private $process = array();
     
@@ -98,13 +101,15 @@ class Application extends Base implements IFactoryEnable
     		$this->language = $this->defaultLang;
     	}
     	
+    	$this->httpRewrite = $config->getBool('rewrite',false);
+    	
     	if( $this->debug ){
     		$this->starttime = explode(' ',microtime());
     		$this->startmemory = memory_get_usage();
     	}
     	
     	$this->request = new Request();
-    	$this->response = Response::getInstance('application.response');
+    	$this->response = Response::getInstance('response');
     	
     	set_error_handler(array($this,'error'));
     	set_exception_handler(array($this,'exception'));
@@ -273,7 +278,15 @@ class Application extends Base implements IFactoryEnable
     	
     	$this->setLang();  
     	
-    	$path = $_SERVER['REQUEST_URI'];
+    	if($_SERVER['PHP_SELF']){
+    		$path = $_SERVER['PHP_SELF'];
+    	}else{
+    		$path = $_SERVER['REQUEST_URI'];
+    		if( strpos($path, '?') !== false ){
+    			$path = substr($path, 0, strpos($path, '?'));
+    		}
+    	}
+    	
     	$path = substr($path, strlen(HTTP_ROOT));
     	$path = str_replace('/index.php', '', $path);
     	$path = ltrim($path,'/');
@@ -310,7 +323,7 @@ class Application extends Base implements IFactoryEnable
 		}
 		
 		if(!$isFind && !empty($this->rules)){
-			throw new NotFoundException();
+			throw (new NotFoundException())->appendMsg( $path );
 		}
         
 		

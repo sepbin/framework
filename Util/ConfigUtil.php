@@ -2,6 +2,7 @@
 namespace Sepbin\System\Util;
 
 use Sepbin\System\Util\Exception\ConfigFormatException;
+use Sepbin\System\Util\Data\DotName;
 
 class ConfigUtil extends AbsGetType
 {
@@ -38,12 +39,18 @@ class ConfigUtil extends AbsGetType
 		
 		foreach ( $config as $key=>$val ){
 			
-			$this->config[$key] = $val;
+			if( strpos($key, '.') ){
+				DotName::set($this->config, $key, $val);
+			}else{
+				$this->config[$key] = $val;
+			}
 		
 		}
 		
 		
 	}
+	
+	
 	
 	
 	public function addPhpFile( string $filename, string $path = CONFIG_DIR ) :void{
@@ -161,46 +168,25 @@ class ConfigUtil extends AbsGetType
 	
 	public function get( string $name, $default='' ){
 		
-		$names = explode('.', $name);
+		return DotName::get($this->config,$name,$default);
 		
-		if( count($names) != 2 ){
-			throw (new ConfigFormatException())->appendMsg( $name.'  正确的格式必须带有命名空间，如XX.XX' );
-		}
-		
-		if( isset( $this->config[$names[0]] ) && isset( $this->config[$names[0]][$names[1]] ) ){
-			return $this->config[$names[0]][$names[1]];
-		}
-		
-		return $default;
 		
 	}
 	
 	public function set( string $name, $value ){
 		
-		$names = explode('.', $name);
-		
-		if( count($names) != 2 ){
-			throw (new ConfigFormatException())->appendMsg( $name.'  正确的格式必须带有命名空间，如XX.XX' );
-		}
-		
-		$this->config[$names[0]][$names[1]] = $value;
+		DotName::set($this->config,$name, $value);
 		
 	}
 	
 	
-	public function getNamespace( string $name ){
-		
-		if( isset($this->config[$name]) ){
-			return $this->config[$name];
-		}
-		
-		return array();
-		
-	}
 	
-	public function checkNamespace( string $name ){
+	public function check( string $name ){
 		
-		return isset($this->config[$name]);
+		$d = DotName::get($this->config,$name,null);
+		
+		if($d != null) return true;
+		return false;
 		
 	}
 	

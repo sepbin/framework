@@ -6,9 +6,13 @@ class FactoryConfig extends AbsGetType
 		
 	private $config;
 	
-	function __construct( array $config ){
+	private $namespace;
+	
+	function __construct( string $namespace, array $config ){
 		
 		$this->config = $config;
+		
+		$this->namespace = $namespace;
 		
 	}
 	
@@ -29,5 +33,9 @@ class FactoryConfig extends AbsGetType
 		
 	}
 	
+	
+	public function getNamespace(){
+		return $this->namespace;
+	}
 	
 }

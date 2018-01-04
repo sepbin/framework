@@ -13,10 +13,13 @@ abstract class AbsController extends Base
 	
 	protected $lang;
 	
-	function __construct(){
-		
+	function __construct(){}
+	
+	/**
+	 * 初始化
+	 */
+	public function _init(){
 		$this->setLang();
-		
 	}
 	
 	/**
