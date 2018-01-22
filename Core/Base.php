@@ -10,23 +10,23 @@ class Base
 {
     
     
-    public function getString(){
+    public function _getString(){
         
         return 'Object#'.get_class($this);
         
     }
     
-    public function getClassName(){
+    public function _getClassName(){
         
         return get_class($this);
         
     }
     
-//     public function __debugInfo(){
-//     	return [
-//     			'a' => 'c'
-//     	];
-//     }
+    public function _instanceOf( $name ){
+    	
+    	return $this instanceof $name;
+    	
+    }
     
     
 }

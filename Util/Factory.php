@@ -41,6 +41,8 @@ class Factory
 			}
 			
 			$config = new FactoryConfig( $config_namespace ,ConfigUtil::getInstance()->get($config_namespace, array()) );
+			$config->file = $config_file;
+			$config->filePath = $config_path;
 			
 			self::$scheme[ $name ][ $config_namespace ] = new $name();
 			
@@ -74,7 +76,13 @@ class Factory
 	}
 	
 	
-	static public function getForString( $condition ){
+	/**
+	 * 根据字符串获取实例，每个参数
+	 * @example 如 sepbin\appliction:app:app.ini
+	 * @param unknown $condition
+	 * @return mixed
+	 */
+	static public function getForString( string $condition ){
 		
 		$tmp = explode(':', $condition);
 		

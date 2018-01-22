@@ -1,10 +1,10 @@
 <?php
 namespace Sepbin\System\Db\Driver;
 
-interface IDriver{
+use Sepbin\System\Util\IFactoryEnable;
+
+interface IDriver extends IFactoryEnable{
 	
-	
-	public function connect( string $host, string $dbname, string $user, string $pass, int $port=0, bool $pconnect=false );
 	
 	public function exec( string $sql );
 	

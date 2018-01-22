@@ -1,11 +1,13 @@
 <?php
 namespace Sepbin\System\Util;
 
-use Sepbin\System\Util\Exception\ConfigFormatException;
 use Sepbin\System\Util\Data\DotName;
+use Sepbin\System\Util\Traits\TGetType;
 
-class ConfigUtil extends AbsGetType
+class ConfigUtil
 {
+	
+	use TGetType;
 	
 	private $config = array();
 	
@@ -46,7 +48,6 @@ class ConfigUtil extends AbsGetType
 			}
 		
 		}
-		
 		
 	}
 	

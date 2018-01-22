@@ -1,6 +1,12 @@
 <?php
 namespace Sepbin\System\Util\Data;
 
+
+/**
+ * 点语法的字符串和数组的转换
+ * @author joson
+ *
+ */
 class DotName
 {
 	

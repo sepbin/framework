@@ -18,6 +18,7 @@ class FileUtil
 		
 		if( StringUtil::substrLast($path) == '/' ){
 			
+			
 			return $path. ltrim( $filename, '/' );
 			
 		}else{

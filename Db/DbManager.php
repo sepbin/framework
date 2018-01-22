@@ -35,15 +35,13 @@ class DbManager extends Base implements IFactoryEnable
 	public function _init(\Sepbin\System\Util\FactoryConfig $config){
 		
 		$this->configNamespace = $config->getNamespace();
-		
 		$driver = $config->getStr('driver','Sepbin\System\Db\Driver\Mysql');
-		$this->driver = new $driver;
+		$writeDriver = $config->getBool('write_driver',false);
 		
-		$this->driver->connect($config->getStr('host'), 
-				$config->getStr('database'), 
-				$config->getStr('user'), 
-				$config->getStr('pass'),
-				$config->getInt('port',0));
+		$this->driver = $config->getInstance('driver', $driver );
+		if( $writeDriver ){
+			$this->writeDriver = $config->getInstance('write_driver', $driver );
+		}
 		
 	}
 	
@@ -59,10 +57,15 @@ class DbManager extends Base implements IFactoryEnable
 		
 	}
 	
-	public function create( string $sql ){
+	
+	/**
+	 * 执行插入
+	 * @param string $sql
+	 * @return unknown|boolean
+	 */
+	public function insert( string $sql ){
 		
 		$result = $this->exec($sql);
-		
 		
 		if( $result !== false ){
 			return $this->driver->getLastInsertId();
@@ -72,6 +75,11 @@ class DbManager extends Base implements IFactoryEnable
 		
 	}
 	
+	/**
+	 * 执行更新
+	 * @param string $sql
+	 * @return unknown
+	 */
 	public function update( string $sql){
 		
 		return $this->exec($sql);
@@ -79,6 +87,11 @@ class DbManager extends Base implements IFactoryEnable
 	}
 	
 	
+	/**
+	 * 获取记录
+	 * @param string $sql
+	 * @return array[]
+	 */
 	public function read( string $sql ){
 		
 		return $this->driver->query($sql);
@@ -86,6 +99,11 @@ class DbManager extends Base implements IFactoryEnable
 	}
 	
 	
+	/**
+	 * 获取一行
+	 * @param string $sql
+	 * @return array
+	 */
 	public function first( string $sql ){
 		
 		$result = $this->read($sql);
@@ -97,6 +115,13 @@ class DbManager extends Base implements IFactoryEnable
 		
 	}
 	
+	/**
+	 * 获取一列
+	 * @param string $sql
+	 * @param string $col
+	 * @param bool $unique
+	 * @return array|unknown
+	 */
 	public function col( string $sql, string $col='', bool $unique=false ){
 		
 		$result = $this->read($sql);
@@ -121,6 +146,9 @@ class DbManager extends Base implements IFactoryEnable
 	}
 	
 	
+	/*
+	 * 执行事务
+	 */
 	public function trans( \Closure $process ){
 		
 		$this->driver->beginTrans();

@@ -39,6 +39,7 @@ if( !empty($_SERVER['REQUEST_URI']) ){
 }else{
 	define('HTTP_ROOT', '');
 }
+
 //--------------------------------------
 
 
@@ -127,7 +128,7 @@ function _url( $url ){
 
 
 //自动加载类文件
-$loader = include 'vendor/autoload.php';
+$loader = include DOCUMENT_ROOT.'/vendor/autoload.php';
 function _registerLib( $namespace_pre, $dir ){
 	global $loader;
 	$loader->addPsr4($namespace_pre, $dir);

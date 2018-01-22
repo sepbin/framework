@@ -1,12 +1,20 @@
 <?php
 namespace Sepbin\System\Util;
 
-class FactoryConfig extends AbsGetType
+use Sepbin\System\Util\Traits\TGetType;
+
+class FactoryConfig
 {
-		
+	
+	use TGetType;
+	
 	private $config;
 	
 	private $namespace;
+	
+	public $file;
+	
+	public $filePath;
 	
 	function __construct( string $namespace, array $config ){
 		
@@ -35,7 +43,16 @@ class FactoryConfig extends AbsGetType
 	
 	
 	public function getNamespace(){
+		
 		return $this->namespace;
+		
+	}
+	
+	
+	public function getInstance( string $property , string $name ){
+		
+		return $name::getInstance( $this->namespace.'.'.$property.'_'.strtolower( substr($name, strrpos($name, '\\')+1) ), $this->file, $this->filePath );
+		
 	}
 	
 }

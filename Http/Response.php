@@ -20,7 +20,6 @@ class Response extends Base implements IFactoryEnable
 	
 	const DATA_TYPE_TEXT = 'txt';
 	
-	
 	private $content_type = 'text/html';
 	
 	/**
@@ -121,7 +120,6 @@ class Response extends Base implements IFactoryEnable
 		
 	}
 	
-	
 	/**
 	 * 把回调过程的输出存进输出缓冲，暂不输出
 	 * @param \Closure $fun
@@ -130,6 +128,7 @@ class Response extends Base implements IFactoryEnable
 	public function bufferOut(\Closure $func):void{
 		$this->put( $this->getOut($func) );
 	}
+	
 	
 	public function getOut(\Closure $func):string{
 		ob_start();
@@ -151,15 +150,18 @@ class Response extends Base implements IFactoryEnable
 			$data = array();
 			
 			foreach ($this->buffer as $item){
+				if(empty($item)) continue;
 				if( is_array($item) ){
 					$data = array_merge( $data, $item );
 				}else{
-					$otherStr .= $item.' ';
+					$item = str_replace(array("\n","\t",'&nbsp;'), '', strip_tags( $item )) ;
+					$item = preg_replace('/\s+/', ' ', $item);
+					$otherStr .= trim($item).' ';
 				}
 			}
 			
 			if( $otherStr !== null ){
-				$data['__other_text'] = str_replace(array("\n","\t",'&nbsp;'), ' ', strip_tags( $otherStr )) ;
+				$data['__other_text'] = $otherStr ;
 			}
 			
 			if($this->content_type == 'text/xml'){
@@ -178,7 +180,7 @@ class Response extends Base implements IFactoryEnable
 				}
 			}
 			
-		}else{
+		}else if ($this->content_type == 'text/html'){
 			
 			foreach ($this->buffer as $item){
 				if(is_string($item)){
@@ -190,14 +192,15 @@ class Response extends Base implements IFactoryEnable
 				}
 			}
 			
+		}else{
+			var_dump('ok');
 		}
+		
 		$this->buffer = array();
 		ob_flush();
 		flush();
 		
 	}
-	
-	
 	
 	
 	/**
