@@ -151,7 +151,20 @@ class MvcControl extends Base implements IFactoryEnable, IRouteEnable
 		}
 		
 		
-		$result = $instance->$methodName();
+		$r = new \ReflectionMethod($instance,$methodName);
+		$paramNames = $r->getParameters();
+		$params = array();
+		
+		if(!empty($paramNames)){
+			foreach ($paramNames as $item){
+				$name = $item->name;
+				if( $item->isDefaultValueAvailable() ){
+					$def = $item->getDefaultValue();
+				}
+				$params[] = request()->get($name,$def);
+			}
+		}
+		$result = $r->invokeArgs($instance, $params);
 		
 		if( !$result instanceof Model ){
 			throw (new ActionResultErrorException())->appendMsg( $this->dispatchClass .' : '. $this->dispatchAction );

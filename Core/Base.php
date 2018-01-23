@@ -28,5 +28,11 @@ class Base
     	
     }
     
+    public function __toString(){
+    	
+    	return 'object#'.get_class($this);
+    	
+    }
+    
     
 }

@@ -26,11 +26,13 @@ class TemplateManager extends Base
 	 */
 	public $controller;
 	
+	
 	/**
 	 * 开发模式是否开启,如果为true将永远不会缓存
 	 * @var string
 	 */
 	public $dev = true;
+	
 	
 	/**
 	 * 模板文件的扩展名
@@ -83,14 +85,11 @@ class TemplateManager extends Base
 	
 	public $layoutFilename;
 	
+	public $isParent = false;
 	
-	/**
-	 * 主模板是否已被解析，防止循环<!--#content-->标记
-	 * @var string
-	 */
-	public $isLayoutParse = false;
+	public $parentFilename = '';
 	
-	
+	public $extendContent = array();
 	
 	function __construct( \Sepbin\System\Frame\AbsController $controller, string $action, string $style='Default' ){
 		
@@ -113,6 +112,12 @@ class TemplateManager extends Base
 	}
 	
 	
+	/**
+	 * 获取一个控制器对应的模板文件路径
+	 * @param \Sepbin\System\Frame\AbsController $controller
+	 * @param string $action_name
+	 * @return string
+	 */
 	private function getFilename( \Sepbin\System\Frame\AbsController $controller, string $action_name ) : string {
 		
 		$controller_name = $controller->moduleName.'/'.$controller->controllerName;
@@ -124,7 +129,11 @@ class TemplateManager extends Base
 	}
 	
 	
-	
+	/**
+	 * 获取文件相对应的缓存文件路径
+	 * @param string $filename
+	 * @return string
+	 */
 	private function getCacheFilename( string $filename ) : string{
 		
 		$filename = str_replace( '/'.$this->style.'/' , '/'.$this->style.'/Cache/', $filename);
@@ -192,36 +201,43 @@ class TemplateManager extends Base
 	 * 获取内容
 	 * @return string
 	 */
-	public function getContent( array $data){
+	public function getContent( array $data) : string{
 		
 		if(!file_exists($this->filename)){
 			throw (new TemplateFileNoFoundException())->appendMsg( $this->filename );
 		}
 		
-		if( $this->isLayout && file_exists($this->layoutFilename) ){
-			
-			$this->basisCacheCallParseEngine( $this->layoutFilename );
-			
-			$object = new TemplateObject($this, $this->getCacheFilename($this->layoutFilename), $data);
-			
-			return $object->getView();
-			
-		}else{
-			
-			trigger_error('缺少layout文件'.$this->layoutFilename, E_USER_ERROR);
-			
-			$this->basisCacheCallParseEngine( $this->filename );
-			
-			$object = new TemplateObject($this, $this->getCacheFilename($this->filename), $data);
-			
-			return $object->getView();
-			
-		}
 		
+			$this->basisCacheCallParseEngine( $this->filename );
+			$object = new TemplateObject($this, $this->getCacheFilename($this->filename), $data);
+			$content = $object->getView();
+			
+			while( $this->isParent ){
+				
+				$parentFilename = $this->styleDir.'/'.$this->parentFilename.'.'.$this->extension;
+				$this->basisCacheCallParseEngine( $parentFilename );
+				
+				$this->isParent = false;
+				$this->parentFilename = '';
+				
+				$object = new TemplateObject($this, $this->getCacheFilename($parentFilename), array());
+				$content = $object->getView();
+				
+			}
+			
+		
+		$content = HookRun::tunnel(IMvcTemplateHook::class, 'tplViewBefore', $content);
+		
+		return $content;
 		
 	}
 	
 	
+	
+	/**
+	 * 检测模板文件是否存在
+	 * @return boolean
+	 */
 	public function checkTemplate(){
 		
 		$result = file_exists($this->filename);
@@ -254,20 +270,37 @@ class TemplateManager extends Base
 	}
 	
 	
-	public function includeController( string $controller_name, string $action_name ){
+	/**
+	 * 嵌入某个控制器的action
+	 * @param string $controller_name
+	 * @param string $action_name
+	 */
+	public function includeController( string $controller_name, string $action_name,...$params ){
 		
 		$controller = Factory::get($controller_name);
 		$action = $action_name.'Action';
-		
 		$filename = $this->getFilename($controller, $action_name);
 		$this->basisCacheCallParseEngine( $filename );
-		$object = new TemplateObject($this, $this->getCacheFilename($filename), $controller->$action()->getData());
-		
+		$object = new TemplateObject($this, $this->getCacheFilename($filename), $controller->$action(...$params)->getData());
 		$object->include( $this->getCacheFilename($filename) );
 		
-// 		$c = $this->getContent( $controller->$action()->getData(), false );
-// 		var_dump($c);
-// 		var_dump($controller->$action());
+	}
+	
+	public function putExtendContent( $name, $value, $append=true ){
+		
+		if(!$append || !isset($this->extendContent[ $name ])){
+			$this->extendContent[ $name ] = $value;
+		}else{
+			$this->extendContent[ $name ] = str_replace('__PARENT__', $value, $this->extendContent[ $name ]);
+		}
+		
+	}
+	
+	public function getExtendContent( $name ){
+		
+		if(isset( $this->extendContent[ $name ] )) return $this->extendContent[$name];
+		
+		return '';
 		
 	}
 	

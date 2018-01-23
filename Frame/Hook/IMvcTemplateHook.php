@@ -20,4 +20,14 @@ interface IMvcTemplateHook
 	 */
 	public function tplCacheBefore( string $content ) : string;
 	
+	
+	/**
+	 * 模板内容显示之前
+	 * 这个接口可以拦截模板的输出，能够更改包括数据库读取的内容在内的所有内容
+	 * 建议不要在此接口中做需要大规模运算的工作，因为每次输出都会运行此方法
+	 * @param string $content
+	 * @return string
+	 */
+	public function tplViewBefore( string $content ): string;
+	
 }

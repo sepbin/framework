@@ -4,7 +4,9 @@ namespace Sepbin\System\Frame\Mvc\View;
 class TemplateObject
 {
 	
+	
 	private $filename;
+	
 	
 	/**
 	 * 
@@ -13,6 +15,8 @@ class TemplateObject
 	private $manage;
 	
 	private $_data;
+	
+	
 	
 	function __construct( TemplateManager $manage ,$filename, array $data ){
 		
@@ -34,9 +38,7 @@ class TemplateObject
 	
 	
 	public function include( $file ){
-		
 		include $file;
-		
 	}
 	
 	/**

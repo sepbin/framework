@@ -4,6 +4,7 @@ namespace Sepbin\System\Frame\Mvc\View\Syntax;
 use Sepbin\System\Util\StringUtil;
 use Sepbin\System\Frame\Mvc\View\BasicSyntax;
 use Sepbin\System\Frame\Mvc\Exception\SyntaxException;
+use Sepbin\System\Frame\Mvc\View\SyntaxUtil;
 
 
 /**
@@ -165,7 +166,6 @@ class ArtTemplate extends BasicSyntax
 		}
 		
 		if( StringUtil::substrFirstLength($condition, 2) == 'if' ){
-			
 			$this->ifLevel++;
 			$condition = substr($condition, 2);
 			$condition = trim($condition);
@@ -211,7 +211,7 @@ class ArtTemplate extends BasicSyntax
 			$item = $this->parseCondition($matches[1]);
 			
 			if(!empty($item)){
-				return $this->phpTag( $item );
+				return SyntaxUtil::phpTag( $item );
 			}
 			
 			return '';

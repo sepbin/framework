@@ -24,7 +24,6 @@ abstract class AbsController extends Base implements IFactoryEnable
 	
 	public function _init( \Sepbin\System\Util\FactoryConfig $config ){
 		
-		
 	}
 	
 	/**

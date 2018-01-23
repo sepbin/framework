@@ -5,9 +5,12 @@ use Sepbin\System\Frame\AbsController;
 use Sepbin\System\Core\Request;
 use Sepbin\System\Frame\Hook\IMvcTemplateHook;
 use Sepbin\System\Http\Response;
+use Sepbin\System\Frame\Model;
 
 abstract class AbsMvcController extends AbsController implements IMvcTemplateHook
 {
+	
+	public $layoutModel;
 	
 	
 	public function _start(){
@@ -18,6 +21,8 @@ abstract class AbsMvcController extends AbsController implements IMvcTemplateHoo
 			getApp()->getResponse()->setContentType( getApp()->defaultDataFormat );
 		}
 		getApp()->registerHook(IMvcTemplateHook::class, $this);
+		
+		$this->layoutModel = new Model();
 		
 		parent::_start();
 		
@@ -42,6 +47,15 @@ abstract class AbsMvcController extends AbsController implements IMvcTemplateHoo
 		return $content;
 		
 	}
+	
+	
+	public function tplViewBefore( string $content ) : string{
+		
+		
+		return $content;
+		
+	}
+	
 	
 	
 	
