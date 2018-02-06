@@ -13,6 +13,6 @@ interface IMvcRenderHook
 	 * @param string $action  执行的方法名称
 	 * @return string 更改的渲染器名称
 	 */
-	public function renderCreateBefore( string $render_name, \Sepbin\System\Mvc\AbsController $controller, string $action ) : string;
+	public function renderCreateBefore( string $render_name, \Sepbin\System\Frame\AbsController $controller, string $action ) : string;
 	
 }

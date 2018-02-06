@@ -20,6 +20,8 @@ class Response extends Base implements IFactoryEnable
 	
 	const DATA_TYPE_TEXT = 'txt';
 	
+	
+	
 	private $content_type = 'text/html';
 	
 	/**
@@ -192,8 +194,6 @@ class Response extends Base implements IFactoryEnable
 				}
 			}
 			
-		}else{
-			var_dump('ok');
 		}
 		
 		$this->buffer = array();

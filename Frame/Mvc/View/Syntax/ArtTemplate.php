@@ -56,11 +56,18 @@ class ArtTemplate extends BasicSyntax
 			
 		}, $condition);
 		
+		$condition = preg_replace_callback('/[\w\.]+\(/', function($matches) use (&$strs){
+			
+			$strs[] = $matches[0];
+			return '\'"***"\'';
+			
+		}, $condition);
 		
-		$condition = preg_replace_callback('/[\w\.]+/', function($matches){
+		$condition = preg_replace_callback('/\$?[\w\.]+/', function($matches){
 			
 			$item = $matches[0];
 			if( !is_numeric($item) && !in_array($item, $this->keyword) ){
+				
 				return $this->parseVar($item) ;
 			}else{
 				return $item;
@@ -90,6 +97,9 @@ class ArtTemplate extends BasicSyntax
 	 */
 	private function parseVar(string $condition):string{
 		
+		if( substr($condition, 0, 1) == '$' ){
+			return '$this->'.str_replace('.', '->', substr($condition, 1)  );
+		}
 		
 		if( $this->loopLevel > 0 ){
 			return $this->parsePrivateVar($condition);

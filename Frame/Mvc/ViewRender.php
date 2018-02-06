@@ -13,11 +13,11 @@ class ViewRender extends AbsRender
 		
 		$data = $model->getData();
 		
-		if( getApp()->getRequest()->getRequestType() == Request::REQUEST_TYPE_BROSWER ){
+		if( $this->requestType == Request::REQUEST_TYPE_BROSWER ){
 			return $this->getTemplateContent($data);
 		}
 		
-		getApp()->getResponse()->setContentType( getApp()->defaultDataFormat );
+		$this->responseFormat = getApp()->defaultDataFormat;
 		
 		return $data;
 		
@@ -31,13 +31,14 @@ class ViewRender extends AbsRender
 	 */
 	protected function getTemplateContent( array $data ) {
 		
-		$template = new TemplateManager($this->controller, $this->actionName);
+		$template = TemplateManager::getInstance();
+		$template->setController($this->controller, $this->actionName);
 		
 		if( $template->checkTemplate() ){
 			return $template->getContent( $data );
 		}
 		
-		getApp()->getResponse()->setContentType( 'html' );
+		$this->responseFormat = 'html';
 		
 		return $data;
 		

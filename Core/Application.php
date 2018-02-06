@@ -24,6 +24,8 @@ class Application extends Base implements IFactoryEnable {
 	
 	private $debug = true;
 	
+	private $debugInfo = true;
+	
 	/**
 	 * 时区
 	 * 
@@ -75,6 +77,7 @@ class Application extends Base implements IFactoryEnable {
 	private $process = array ();
 	private $errHandler = array ();
 	private $hook = array ();
+	private $rules = array ();
 	
 	/**
 	 * 应用的请求对象
@@ -91,11 +94,16 @@ class Application extends Base implements IFactoryEnable {
 	private $response;
 	private $starttime;
 	private $startmemory;
+	
+	
+	
 	static public function getInstance(string $config_namespace = null, string $config_file = null, string $config_path = CONFIG_DIR): Application {
 		return Factory::get ( Application::class, $config_namespace, $config_file, $config_path );
 	}
+	
 	public function _init(FactoryConfig $config) {
 		$this->debug = $config->getBool ( 'debug', true );
+		$this->debugInfo = $config->getBool('debug_info', false);
 		$this->charset = $config->getStr ( 'charset', 'utf8' );
 		
 		if ($config->check ( 'timezone' )) {
@@ -111,6 +119,7 @@ class Application extends Base implements IFactoryEnable {
 			$this->defaultDataFormat = $config->getStr('default_data_format');
 		}
 		
+		
 		$this->httpRewrite = $config->getBool ( 'rewrite', false );
 		
 		$this->defaultPath = $config->getStr('default_path','');
@@ -119,6 +128,7 @@ class Application extends Base implements IFactoryEnable {
 			$this->starttime = explode ( ' ', microtime () );
 			$this->startmemory = memory_get_usage ();
 		}
+		
 		
 		$this->request = new Request ();
 		$this->response = Response::getInstance ( 'response' );
@@ -183,10 +193,11 @@ class Application extends Base implements IFactoryEnable {
 		
 		return $set->$method_name ( ...$params );
 	}
+	
 	public function registerLib($namespace_pre, $dir) {
 		_registerLib ( $namespace_pre, $dir );
 	}
-	private $rules = array ();
+	
 	public function addRoute($rule, $delegate, $params = array()) {
 		$this->rules [$rule] = array (
 				'delegate' => $delegate,
@@ -372,6 +383,7 @@ class Application extends Base implements IFactoryEnable {
 	 * 脚本错误
 	 */
 	public function error($errno, $errstr, $errfile, $errline) {
+		
 		switch ($errno) {
 			
 			case E_USER_ERROR :
@@ -409,6 +421,8 @@ class Application extends Base implements IFactoryEnable {
 	 */
 	private function outAssist(){
 		
+		if( !$this->debugInfo ) return ;
+		
 		$this->response->bufferOut ( function () {
 			$endtime = explode ( ' ', microtime () );
 			$runtime = $endtime [0] + $endtime [1] - ($this->starttime [0] + $this->starttime [1]);
@@ -432,7 +446,9 @@ class Application extends Base implements IFactoryEnable {
 	 */
 	public function exception($e) {
 		
-		// ob_clean();
+		ob_end_clean();
+		ob_clean();
+		
 		$this->response->bufferOut ( function () use ($e) {
 			AppExceptionView::$app = $this;
 			AppExceptionView::$err = $e;

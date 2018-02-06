@@ -6,6 +6,7 @@ use Sepbin\System\Core\Request;
 use Sepbin\System\Frame\Hook\IMvcTemplateHook;
 use Sepbin\System\Http\Response;
 use Sepbin\System\Frame\Model;
+use Sepbin\System\Frame\Mvc\View\TemplateObject;
 
 abstract class AbsMvcController extends AbsController implements IMvcTemplateHook
 {
@@ -56,7 +57,11 @@ abstract class AbsMvcController extends AbsController implements IMvcTemplateHoo
 		
 	}
 	
-	
+	public function tplObjectInit( TemplateObject $tpl ):void{
+		
+		
+		
+	}
 	
 	
 	

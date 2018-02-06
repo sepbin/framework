@@ -39,6 +39,7 @@ class DbManager extends Base implements IFactoryEnable
 		$writeDriver = $config->getBool('write_driver',false);
 		
 		$this->driver = $config->getInstance('driver', $driver );
+		
 		if( $writeDriver ){
 			$this->writeDriver = $config->getInstance('write_driver', $driver );
 		}
@@ -164,7 +165,7 @@ class DbManager extends Base implements IFactoryEnable
 	}
 	
 	
-	private function exec( string $sql ){
+	public function exec( string $sql ){
 		$result = $this->driver->exec($sql);
 		
 		if( getApp()->isDebug() && $result === false ){

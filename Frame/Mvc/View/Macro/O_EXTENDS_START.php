@@ -8,7 +8,15 @@ class O_EXTENDS_START
 	
 	static public function parse(\Sepbin\System\Frame\Mvc\View\TemplateManager $manage, $key){
 		
-		return SyntaxUtil::phpTag(' ob_start(function($content){ $this->manage->putExtendContent(\''.$key.'\',$content); }) ');
+		return SyntaxUtil::phpTag(' 
+			
+			if( !$this->manage->ignoreParent ){
+				ob_start(function($content){ 
+					$this->manage->putExtendContent(\''.$key.'\',$content); return "haha"; 
+				});
+			}
+
+		');
 		
 	}
 	

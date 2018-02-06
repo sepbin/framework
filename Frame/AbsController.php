@@ -15,6 +15,8 @@ abstract class AbsController extends Base implements IFactoryEnable
 	
 	public $actionName;
 	
+	public $_isStart = false;
+	
 	
 	static public function getInstance( string $config_namespace=null, string $config_file=null, string $config_path=CONFIG_DIR ){
 		
@@ -33,9 +35,12 @@ abstract class AbsController extends Base implements IFactoryEnable
 		
 		$this->setLang();
 		
+		
 	}
 	
 	public function _end(){
+		
+		$this->_isStart = true;
 		
 	}
 	

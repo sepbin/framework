@@ -10,6 +10,8 @@ use Sepbin\System\Frame\Hook\IMvcTemplateHook;
 use Sepbin\System\Frame\Mvc\View\Syntax\ArtTemplate;
 use Sepbin\System\Util\Data\ClassName;
 use Sepbin\System\Util\Factory;
+use Sepbin\System\Util\IFactoryEnable;
+use Sepbin\System\Frame\Action;
 
 
 /**
@@ -17,7 +19,7 @@ use Sepbin\System\Util\Factory;
  * @author joson
  * 
  */
-class TemplateManager extends Base
+class TemplateManager extends Base implements IFactoryEnable
 {
 	
 	/**
@@ -25,6 +27,8 @@ class TemplateManager extends Base
 	 * @var AbsController
 	 */
 	public $controller;
+	
+	public $action;
 	
 	
 	/**
@@ -45,7 +49,7 @@ class TemplateManager extends Base
 	 * 使用的样式
 	 * @var string
 	 */
-	public $style = 'Default';
+	public $style = 'Index';
 	
 	
 	/**
@@ -61,19 +65,21 @@ class TemplateManager extends Base
 	 */
 	public $cacheDirName = 'Cache';
 	
+	public $cacheDir = '';
+	
 	
 	/**
 	 * 使用的语法解析引擎
 	 * @var string
 	 */
-	public $parseEngine = ArtTemplate::class;
+	public $parseEngine;
 	
 	
 	/**
-	 * 是否使用layout
+	 * 是否忽略模板继承
 	 * @var bool
 	 */
-	public $isLayout = true;
+	public $ignoreParent = false;
 	
 	
 	
@@ -83,33 +89,46 @@ class TemplateManager extends Base
 	
 	public $filename;
 	
-	public $layoutFilename;
+	
+	
 	
 	public $isParent = false;
-	
 	public $parentFilename = '';
-	
+	public $parentModule = '';
+	public $parentController = '';
+	public $parentAction = '';
+	public $parentParams = array();
 	public $extendContent = array();
 	
-	function __construct( \Sepbin\System\Frame\AbsController $controller, string $action, string $style='Default' ){
+	
+	static public function getInstance( string $config_namespace=null, string $config_file=null, string $config_path=CONFIG_DIR ):TemplateManager{
 		
-		HookRun::void(IMvcTemplateHook::class, 'tplManagerInit', $this);
+		return Factory::get( TemplateManager::class, 'template', $config_file, $config_path );
 		
-		$this->controller = $controller;
+	}
+	
+	public function _init( \Sepbin\System\Util\FactoryConfig $config ){
 		
-		$this->style = $style;
-		
+		$this->style = $config->get('style','Index');
 		$this->styleDir = APP_DIR.'/View/'.$this->style;
+		$this->extension = $config->get('ext_name','html');
+		$this->parseEngine = $config->get('parse_engine',ArtTemplate::class);
+		$this->cacheDirName = $config->get('cache_dir','Cache');
+		HookRun::void(IMvcTemplateHook::class, 'tplManagerInit', $this);
 		
 		$this->stylePath = HTTP_ROOT.'/application/View/'.$this->style;
 		
-		$this->cacheDir = $this->styleDir.'/'.$this->cacheDirName;
-		
-		$this->filename = $this->getFilename( $controller, $action );
-		
-		$this->layoutFilename = $this->styleDir.'/'.$this->layoutName.'.'.$this->extension;
 		
 	}
+	
+	public function setController( AbsController $controller, string $action ):void{
+		
+		$this->controller = $controller;
+		$this->action = $action;
+		$this->filename = $this->getFilename( $this->controller, $this->action );
+		
+	}
+	
 	
 	
 	/**
@@ -136,8 +155,7 @@ class TemplateManager extends Base
 	 */
 	private function getCacheFilename( string $filename ) : string{
 		
-		$filename = str_replace( '/'.$this->style.'/' , '/'.$this->style.'/Cache/', $filename);
-		
+		$filename = str_replace( $this->styleDir , $this->styleDir.'/'.$this->cacheDirName, $filename);
 		return str_replace('.'.$this->extension, '.php', $filename);
 		
 	}
@@ -208,25 +226,48 @@ class TemplateManager extends Base
 		}
 		
 		
-			$this->basisCacheCallParseEngine( $this->filename );
-			$object = new TemplateObject($this, $this->getCacheFilename($this->filename), $data);
-			$content = $object->getView();
-			
+		$this->basisCacheCallParseEngine( $this->filename );
+		$object = new TemplateObject($this, $this->getCacheFilename($this->filename), $data);
+		$content = $object->getView();
+		
+		
+		if( !$this->ignoreParent ){
 			while( $this->isParent ){
+				$parentData = array();
+				$dispatchClass = 'SepApp\Application\\'.$this->parentModule .'\\'.$this->parentController.'Controller' ;
+				if( class_exists($dispatchClass) ){
+					/**
+					 * 
+					 * @var AbsController $instance
+					 */
+					$instance = Factory::get($dispatchClass);
+					$instance->moduleName = $this->parentModule;
+					$instance->controllerName = $this->parentController;
+					$instance->actionName = $this->parentAction;
+					
+					$parentData = call_user_func_array( array($instance, $this->parentAction.'Action'), $this->parentParams );
+					$parentData = $parentData->getData();
+					
+				}
 				
 				$parentFilename = $this->styleDir.'/'.$this->parentFilename.'.'.$this->extension;
 				$this->basisCacheCallParseEngine( $parentFilename );
-				
 				$this->isParent = false;
+				$this->parentModule = '';
+				$this->parentController = '';
+				$this->parentAction = '';
 				$this->parentFilename = '';
+				$this->parentParams = [];
 				
-				$object = new TemplateObject($this, $this->getCacheFilename($parentFilename), array());
+				
+				$object = new TemplateObject($this, $this->getCacheFilename($parentFilename), $parentData);
 				$content = $object->getView();
 				
 			}
-			
+		}
 		
 		$content = HookRun::tunnel(IMvcTemplateHook::class, 'tplViewBefore', $content);
+		
 		
 		return $content;
 		
@@ -275,9 +316,10 @@ class TemplateManager extends Base
 	 * @param string $controller_name
 	 * @param string $action_name
 	 */
-	public function includeController( string $controller_name, string $action_name,...$params ){
+	public function includeController( string $module_name, string $controller_name, string $action_name,...$params ){
 		
-		$controller = Factory::get($controller_name);
+		$dispatchClass = 'SepApp\Application\\'. $module_name .'\\'.$controller_name.'Controller' ;
+		$controller = Factory::get( $dispatchClass );
 		$action = $action_name.'Action';
 		$filename = $this->getFilename($controller, $action_name);
 		$this->basisCacheCallParseEngine( $filename );

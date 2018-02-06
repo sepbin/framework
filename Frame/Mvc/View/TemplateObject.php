@@ -1,6 +1,9 @@
 <?php
 namespace Sepbin\System\Frame\Mvc\View;
 
+use Sepbin\System\Util\HookRun;
+use Sepbin\System\Frame\Hook\IMvcTemplateHook;
+
 class TemplateObject
 {
 	
@@ -14,6 +17,12 @@ class TemplateObject
 	 */
 	private $manage;
 	
+	private $_module;
+	
+	private $_controller;
+	
+	private $_action;
+	
 	private $_data;
 	
 	
@@ -24,11 +33,17 @@ class TemplateObject
 		$this->filename = $filename;
 		$this->_data = $data;
 		
+		$this->_module = $manage->controller->moduleName;
+		$this->_controller = $manage->controller->controllerName;
+		$this->_action = $manage->controller->actionName;
+		
 	}
 	
 	
 	
 	public function getView(){
+		
+		HookRun::void(IMvcTemplateHook::class, 'tplObjectInit', $this);
 		
 		return getApp()->getResponse()->getOut(function(){
 			$this->include($this->filename);
@@ -56,5 +71,12 @@ class TemplateObject
 		return $this->_data[$name];
 		
 	}
+	
+	function __set( $name, $value ){
+		
+		$this->_data[$name] = $value;
+		
+	}
+	
 	
 }
