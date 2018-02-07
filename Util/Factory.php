@@ -28,7 +28,7 @@ class Factory
 		
 		if( $config_namespace == null ){
 			
-			$config_namespace = '____default____';
+			$config_namespace = $name;
 			
 		}
 		
@@ -36,7 +36,7 @@ class Factory
 		
 		if( !isset( self::$scheme[ $name ][ $config_namespace ] ) ){
 			
-			if( $config_namespace != '____default____' && !ConfigUtil::getInstance()->check($config_namespace) ){
+			if( $config_namespace != $name && !ConfigUtil::getInstance()->check($config_namespace) ){
 				trigger_error('代码中声明却缺少命名空间为'.$config_namespace.'的配置',E_USER_WARNING);
 			}
 			
