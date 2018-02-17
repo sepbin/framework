@@ -35,7 +35,7 @@ class TemplateManager extends Base implements IFactoryEnable
 	 * 开发模式是否开启,如果为true将永远不会缓存
 	 * @var string
 	 */
-	public $dev = true;
+	public $dev = false;
 	
 	
 	/**
