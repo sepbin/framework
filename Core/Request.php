@@ -136,6 +136,7 @@ class Request extends Base
 		
 	}
 	
+	
 	/**
 	 * 获取全部输入数据
 	 * @return string

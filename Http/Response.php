@@ -22,7 +22,7 @@ class Response extends Base implements IFactoryEnable
 	
 	
 	
-	private $content_type = 'text/html';
+	private $contentType = 'text/html';
 	
 	/**
 	 * 响应编码
@@ -103,7 +103,7 @@ class Response extends Base implements IFactoryEnable
 	 */
 	public function setContentType( string $ext ){
 		
-		$this->content_type = ContentType::getMimeType($ext);
+		$this->contentType = MIME::getMimeType($ext);
 		
 	}
 	
@@ -146,7 +146,7 @@ class Response extends Base implements IFactoryEnable
 	public function flush():void{
 		
 		$this->sendHeader();
-		if( $this->content_type == 'text/xml' || $this->content_type == 'application/json' ){
+		if( $this->contentType == 'text/xml' || $this->contentType == 'application/json' ){
 			
 			$otherStr = null;
 			$data = array();
@@ -166,13 +166,13 @@ class Response extends Base implements IFactoryEnable
 				$data['__other_text'] = $otherStr ;
 			}
 			
-			if($this->content_type == 'text/xml'){
+			if($this->contentType == 'text/xml'){
 				echo ArrayXML::arrayToXmlString($data);
 			}else{
 				echo json_encode($data,JSON_UNESCAPED_UNICODE);
 			}
 			
-		}elseif ( $this->content_type == 'text/plain' ){
+		}elseif ( $this->contentType == 'text/plain' ){
 			
 			foreach ($this->buffer as $item){
 				if(is_string($item)){
@@ -182,7 +182,7 @@ class Response extends Base implements IFactoryEnable
 				}
 			}
 			
-		}else if ($this->content_type == 'text/html'){
+		}else if ($this->contentType == 'text/html'){
 			
 			foreach ($this->buffer as $item){
 				if(is_string($item)){
@@ -208,7 +208,7 @@ class Response extends Base implements IFactoryEnable
 	 */
 	private function sendHeader(){
 		if (isset($this->charset)){
-			header("Content-Type:{$this->content_type}; charset={$this->charset}");
+		    header("Content-Type:{$this->contentType}; charset={$this->charset}");
 		}
 		if (isset($this->cacheControl)){
 			header("Cache-control:{$this->cacheControl}");

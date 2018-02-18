@@ -18,6 +18,10 @@ if(!defined('LIB_DIR')) define('LIB_DIR', DOCUMENT_ROOT.'/lib');
 if(!defined('CONFIG_DIR')) define('CONFIG_DIR', DOCUMENT_ROOT.'/config');
 
 
+//项目数据储存目录，需要有写权限
+if(!defined('DATA_DIR')) define('DATA_DIR', DOCUMENT_ROOT.'/data');
+
+
 //项目类库顶级命名
 if(!defined('LIB_PREFIX')) define('LIB_PREFIX', 'SepLib\\');
 

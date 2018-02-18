@@ -52,7 +52,10 @@ class SqlWhereHelper extends Base
 		
 	}
 	
-	
+	public function pre( string $pre ){
+	    $this->pre = $pre;
+	    return $this;
+	}
 	
 	public function put( ...$params ){
 		

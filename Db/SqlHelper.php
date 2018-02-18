@@ -60,6 +60,11 @@ class SqlHelper extends Base
 	
 	private $lastSQL = '';
 	
+	/**
+	 * 
+	 * @var DbManager
+	 */
+	private $manager;
 	
 	
 	static public function table(string $table){
@@ -73,6 +78,11 @@ class SqlHelper extends Base
 		
 		$this->table = $table;
 		
+	}
+	
+	public function setManager( DbManager $manager ){
+	    $this->manager = $manager;
+	    return $this;
 	}
 	
 	
@@ -212,6 +222,51 @@ class SqlHelper extends Base
 		
 	}
 	
+	public function exec(){
+	    if( !$this->manager ) return null;
+	    $this->lastSQL = '';
+	    switch ($this->type){
+	        case $this->INSERT:
+	            $this->createInsert();
+	            return $this->manager->insert($this->lastSQL);
+	        case $this->UPDATE:
+	            $this->createUpdate();
+	            return $this->manager->update($this->lastSQL);
+	        case $this->DELETE:
+	            $this->createDelete();
+	            return $this->manager->delete($this->lastSQL);
+	    }
+	}
+	
+	public function read(){
+	    if( !$this->manager || $this->type != $this->SELECT ) return null;
+	    $this->lastSQL = '';
+	    $this->createSelect();
+	    return $this->manager->read($this->lastSQL);
+	}
+	
+	public function col(){
+	    if( !$this->manager || $this->type != $this->SELECT ) return null;
+	    $this->lastSQL = '';
+	    $this->createSelect();
+	    return $this->manager->col($this->lastSQL);
+	}
+	
+	public function first(){
+	    if( !$this->manager || $this->type != $this->SELECT ) return null;
+	    $this->lastSQL = '';
+	    $this->createSelect();
+	    return $this->manager->first($this->lastSQL);
+	}
+	
+	public function var(){
+	    if( !$this->manager || $this->type != $this->SELECT ) return null;
+	    $this->lastSQL = '';
+	    $this->createSelect();
+	    return $this->manager->var($this->lastSQL);
+	}
+	
+	
 	private function createInsert(){
 		
 		$this->lastSQL = $this->INSERT.' '.$this->getTableName() .'(';
@@ -226,7 +281,7 @@ class SqlHelper extends Base
 	
 	private function createUpdate(){
 		
-		$this->lastSQL = $this->UPDATE.' SET ';
+		$this->lastSQL = $this->UPDATE.' '. $this->getTableName() .' SET ';
 		$i = 0;
 		foreach ($this->params as $key=>$val){
 			$i++;
@@ -236,7 +291,6 @@ class SqlHelper extends Base
 			}
 		}
 		
-		$this->lastSQL .= ' FROM '.$this->getTableName();
 		$this->appendWhere();
 		
 	}

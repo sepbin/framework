@@ -2,17 +2,10 @@
 namespace Sepbin\System\Frame;
 
 use Sepbin\System\Core\Base;
-use Sepbin\System\Core\Application;
-use Sepbin\System\Frame\Mvc\Exception\RenderErrorException;
-use Sepbin\System\Util\HookRun;
 use Sepbin\System\Util\IFactoryEnable;
 use Sepbin\System\Util\Factory;
-use Sepbin\System\Frame\Hook\IMvcModelHook;
-use Sepbin\System\Frame\Hook\IMvcRenderHook;
 use Sepbin\System\Core\IRouteEnable;
 use Sepbin\System\Util\Data\ClassName;
-use Sepbin\System\Frame\Mvc\ViewRender;
-use Sepbin\System\Frame\AbsRender;
 use Sepbin\System\Frame\Action;
 
 class FrameControl extends Base implements IFactoryEnable, IRouteEnable

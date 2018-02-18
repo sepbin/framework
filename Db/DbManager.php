@@ -25,6 +25,14 @@ class DbManager extends Base implements IFactoryEnable
 	
 	private $configNamespace;
 	
+	private $lastCommand;
+	
+	/**
+	 * 表名前缀
+	 * @var string
+	 */
+	private $prefix='';
+	
 	
 	static public function getInstance( string $config_namespace=null, string $config_file=null, string $config_path=CONFIG_DIR ):DbManager{
 		
@@ -37,6 +45,7 @@ class DbManager extends Base implements IFactoryEnable
 		$this->configNamespace = $config->getNamespace();
 		$driver = $config->getStr('driver','Sepbin\System\Db\Driver\Mysql');
 		$writeDriver = $config->getBool('write_driver',false);
+		$this->prefix = $config->getStr('prefix');
 		
 		$this->driver = $config->getInstance('driver', $driver );
 		
@@ -87,6 +96,12 @@ class DbManager extends Base implements IFactoryEnable
 		
 	}
 	
+	public function delete( string $sql ){
+	    
+        return $this->exec($sql);
+	    
+	}
+	
 	
 	/**
 	 * 获取记录
@@ -94,6 +109,8 @@ class DbManager extends Base implements IFactoryEnable
 	 * @return array[]
 	 */
 	public function read( string $sql ){
+	    
+	    $this->lastCommand = $sql;
 		
 		return $this->driver->query($sql);
 		
@@ -117,6 +134,16 @@ class DbManager extends Base implements IFactoryEnable
 	}
 	
 	/**
+	 * 获取一个
+	 * @param string $sql
+	 */
+	public function var( string $sql ){
+	    $result = $this->first($sql);
+	    if(!empty($result)) return current($result);
+	    return '';
+	}
+	
+	/**
 	 * 获取一列
 	 * @param string $sql
 	 * @param string $col
@@ -135,11 +162,7 @@ class DbManager extends Base implements IFactoryEnable
 	}
 	
 	
-	public function delete( string $sql ){
-		
-		return $this->driver->exec($sql);
-		
-	}
+	
 	
 	public function close(){
 		$this->driver->close();
@@ -166,6 +189,8 @@ class DbManager extends Base implements IFactoryEnable
 	
 	
 	public function exec( string $sql ){
+	    
+	    $this->lastCommand = $sql;
 		$result = $this->driver->exec($sql);
 		
 		if( getApp()->isDebug() && $result === false ){
@@ -174,6 +199,22 @@ class DbManager extends Base implements IFactoryEnable
 		
 		return $result;
 		
+	}
+	
+	public function getSQL( string $table ){
+	    
+	    return (new SqlHelper($table))->pre($this->prefix)->setManager($this);
+	    
+	}
+	
+	public function getSQLWhere(){
+	    
+	    return (new SqlWhereHelper())->pre($this->prefix);
+	    
+	}
+	
+	public function getLastCommand(){
+	    return $this->lastCommand;
 	}
 	
 	
