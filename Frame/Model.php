@@ -29,7 +29,9 @@ class Model extends Base
 		$data = array();
 		foreach ($vars as $item){
 			$name = $item->name;
-			$data[ $item->name ] = $this->$name;
+			if( $this->$name !== null ){
+			     $data[ $item->name ] = $this->$name;
+			}
 		}
 		return array_merge($data, $this->_data);
 		

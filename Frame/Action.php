@@ -63,6 +63,7 @@ class Action extends Base
 		
 		$instance->controller->moduleName = $module_name;
 		$instance->controller->controllerName = $controller_name;
+		
 		return $instance;
 		
 	}
@@ -88,27 +89,37 @@ class Action extends Base
 	 * @return unknown
 	 */
 	public function __call( $name, $args ) {
-		
+	    
 		$action = $this->getActionMethod($name);
 		
 		//如果调用的方法在同一个控制器中，则直接调用并返回结果
 		$backtrace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT,2);
 		array_shift($backtrace);
+		
+		//否则跨控制器执行方法
+		if( !method_exists($this->controller, $action) && !method_exists($this->controller, '_every') ){
+		    throw (new NotFoundException())->appendMsg( 'action : ' . $action );
+		}
+		
+		
 		if( $backtrace[0]['object'] == $this->controller ){
 			
-			$result = $this->controller->$action(...$args);
+		    if( method_exists($this->controller, $action) ){
+		         $result = $this->controller->$action(...$args);
+		    }else{
+		         $result = $this->controller->_every( $name );
+		    }
 			
 		}else{
-			
-			//否则跨控制器执行方法
-			if( !method_exists($this->controller, $action) ){
-				throw (new NotFoundException())->appendMsg( 'action : ' . $action );
-			}
 			
 			$this->controller->actionName = $action;
 			if( !$this->controller->_isStart ) $this->controller->_start();
 			
-			$result = $this->controller->$action( ...$args );
+			if( method_exists($this->controller, $action) ){
+			    $result = $this->controller->$action( ...$args );
+			}else{
+			    $result = $this->controller->_every( $name );
+			}
 			
 			if( !$this->controller->_isStart ) $this->controller->_end();
 			
@@ -119,10 +130,10 @@ class Action extends Base
 			throw (new ActionResultErrorException())->appendMsg( $this->moduleName .' : '.$this->controllerName.' -> '. $action );
 		}
 		
-		if( isset(FrameControl::$render[ get_class($result) ]) ){
-			$this->render = new FrameControl::$render[ get_class($result) ];
+		if( isset(FrameManager::$render[ get_class($result) ]) ){
+		    $this->render = new FrameManager::$render[ get_class($result) ];
 			if( !$this->render instanceof AbsRender ){
-				throw (new RenderErrorException())->appendMsg( FrameControl::render[ get_class($result) ] );
+			    throw (new RenderErrorException())->appendMsg( FrameManager::render[ get_class($result) ] );
 			}
 			
 		}else{
@@ -131,7 +142,9 @@ class Action extends Base
 		}
 		
 		HookRun::void(IMvcModelHook::class, 'modelRenderBefore', $result);
+		
 		$this->render->setRouteInfo($this->controller, $name);
+		
 		if($this->requestType != null){
 			$this->render->requestType = $this->requestType;
 		}

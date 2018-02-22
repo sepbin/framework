@@ -449,20 +449,22 @@ class Application extends Base implements IFactoryEnable {
 		ob_end_clean();
 		ob_clean();
 		
-		$this->response->bufferOut ( function () use ($e) {
-			AppExceptionView::$app = $this;
-			AppExceptionView::$err = $e;
-			if ($this->request->getRequestType () == Request::REQUEST_TYPE_CONSOLE) {
-				AppExceptionView::string ();
-			} elseif ($this->request->getRequestType () == Request::REQUEST_TYPE_POST) {
-				AppExceptionView::json ();
-			} else {
-				AppExceptionView::html ();
-			}
-		} );
-		
 		if (isset ( $this->errHandler [$e->getCode ()] )) {
-			$this->errHandler [$e->getCode] ( $e->getCode (), $e->getMessage (), $e->getFile (), $e->getLine () );
+			$this->errHandler[$e->getCode()]( $e->getCode (), $e->getMessage (), $e->getFile (), $e->getLine () );
+		}else{
+		    
+		    $this->response->bufferOut ( function () use ($e) {
+		        AppExceptionView::$app = $this;
+		        AppExceptionView::$err = $e;
+		        if ($this->request->getRequestType () == Request::REQUEST_TYPE_CONSOLE) {
+		            AppExceptionView::string ();
+		        } elseif ($this->request->getRequestType () == Request::REQUEST_TYPE_POST) {
+		            AppExceptionView::json ();
+		        } else {
+		            AppExceptionView::html ();
+		        }
+		    } );
+		    
 		}
 		
 		try {

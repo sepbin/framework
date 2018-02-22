@@ -39,6 +39,12 @@ class ArtTemplate extends BasicSyntax
 	private $ifLevel = 0;
 	
 	
+// 	static public function parseData($data){
+	    
+// 	    return json_decode( json_encode($data) );
+	    
+// 	}
+	
 	
 	/**
 	 * 在一串表达式里，找到为变量的字符，并转义成PHP变量表达式
@@ -67,7 +73,6 @@ class ArtTemplate extends BasicSyntax
 			
 			$item = $matches[0];
 			if( !is_numeric($item) && !in_array($item, $this->keyword) ){
-				
 				return $this->parseVar($item) ;
 			}else{
 				return $item;
@@ -97,16 +102,16 @@ class ArtTemplate extends BasicSyntax
 	 */
 	private function parseVar(string $condition):string{
 		
+	    
 		if( substr($condition, 0, 1) == '$' ){
-			return '$this->'.str_replace('.', '->', substr($condition, 1)  );
+		    return $this->parseTopVar(substr($condition, 1));
 		}
-		
+        
 		if( $this->loopLevel > 0 ){
 			return $this->parsePrivateVar($condition);
 		}
 		
-		
-		return '$this->'.str_replace('.', '->',$condition);
+		return $this->parseTopVar($condition);
 		
 	}
 	
@@ -122,6 +127,15 @@ class ArtTemplate extends BasicSyntax
 	}
 	
 	
+	/**
+	 * 转义顶级变量
+	 * @param string $condition
+	 * @return string
+	 */
+	private function parseTopVar( string $condition ):string{
+	    return '$this->'.str_replace('.', '->',$condition);
+	}
+	
 	
 	/**
 	 * 转义表达式
@@ -135,14 +149,14 @@ class ArtTemplate extends BasicSyntax
 		
 		if( StringUtil::substrFirstLength($condition, 4) == 'each' ){
 			
+		    
 			$condition = substr($condition, 4);
 			$condition = trim($condition);
 			
-			if( preg_match('/^\w+$/', $condition) ){
+			if( preg_match('/^[\w\$\.]+$/', $condition) ){
 				
-				$result = '//if(isset('.$this->parseVar( $condition ).')):
+				$result = '
 					foreach( '. $this->parseVar( $condition ) .' as $index => $value ):
-					if( is_array($value) ) $value= json_decode( json_encode( $value ) );
 					';
 				
 			}
@@ -152,9 +166,14 @@ class ArtTemplate extends BasicSyntax
 				
 				$result = '
 					foreach( '. $this->parseVar( $tmparr[0] ).' as $'.$tmparr[3].' => $'.$tmparr[2].' ):
-					if( is_array($'.$tmparr[2].') ) $'.$tmparr[2].'= json_decode( json_encode( $'.$tmparr[2].' ) );
 				';
 				
+			}
+			
+			if( count($tmparr) == 3 ){
+			    $result = '
+					foreach( '. $this->parseVar( $tmparr[0] ).' as $index => $'.$tmparr[2].' ):
+				';
 			}
 			
 			
@@ -179,9 +198,7 @@ class ArtTemplate extends BasicSyntax
 			$this->ifLevel++;
 			$condition = substr($condition, 2);
 			$condition = trim($condition);
-			
 			$condition =  $this->parseVars($condition);
-			
 			return "if( $condition ):";
 		}
 		
@@ -190,13 +207,10 @@ class ArtTemplate extends BasicSyntax
 			return 'endif';
 		}
 		
-		if( preg_match('/^(#|@|\$)?[\w\.\[\]\'\"]+$/i', $condition) ){
+		if( preg_match('/^(#|@|\$){0,2}[\w\.\[\]\'\"]+$/i', $condition) ){
+		    
 			if(StringUtil::substrFirst($condition) == '#' || StringUtil::substrFirst($condition) == '@'){
 				return 'echo '.$this->parseVar( substr($condition,1) );
-			}
-			
-			if(StringUtil::substrFirst($condition) == '$'){
-				return 'echo '.$this->parsePrivateVar( substr($condition,1) );
 			}
 			
 			return 'echo htmlspecialchars('.$this->parseVar($condition).')';

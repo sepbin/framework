@@ -83,7 +83,7 @@ class Files extends ACache
         
         $data = unserialize( $datas['data'] );
         
-        if( time() > $savetime+$expire ){
+        if( $expire!=0 && time() > $savetime+$expire ){
             @unlink( $this->getFilename($key) );
             return null;
         }

@@ -33,6 +33,14 @@ class Factory
 		}
 		
 		
+		$global_config = ConfigUtil::getInstance();
+		$names_config = $global_config->get($config_namespace,array());
+		
+		//跳转命名空间
+		if( is_string($names_config) && !empty($names_config) ){
+		    return self::getForString($name.':'.$names_config);
+		}
+		
 		
 		if( !isset( self::$scheme[ $name ][ $config_namespace ] ) ){
 			
@@ -40,7 +48,7 @@ class Factory
 				trigger_error('代码中声明却缺少命名空间为'.$config_namespace.'的配置',E_USER_WARNING);
 			}
 			
-			$config = new FactoryConfig( $config_namespace ,ConfigUtil::getInstance()->get($config_namespace, array()) );
+			$config = new FactoryConfig( $config_namespace , $names_config );
 			$config->file = $config_file;
 			$config->filePath = $config_path;
 			
@@ -86,14 +94,8 @@ class Factory
 		
 		$tmp = explode(':', $condition);
 		
-		if( count($tmp) == 1 ){
-			return self::get($tmp[0]);
-		}
-		if( count($tmp) == 2 ){
-			return self::get($tmp[0], $tmp[1]);
-		}
-		if( count($tmp) == 3 ){
-			return self::get($tmp[0], $tmp[1], $tmp[2]);
+		if( count($tmp) > 0 && count($tmp) <= 4 ){
+		    return self::get( ... $tmp );
 		}
 		
 		throw (new SepException())->appendMsg( $condition );

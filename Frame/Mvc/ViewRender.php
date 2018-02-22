@@ -5,6 +5,7 @@ use Sepbin\System\Frame\AbsRender;
 use Sepbin\System\Frame\Model;
 use Sepbin\System\Core\Request;
 use Sepbin\System\Frame\Mvc\View\TemplateManager;
+use Sepbin\System\Frame\ResultModel;
 
 class ViewRender extends AbsRender
 {
@@ -13,8 +14,10 @@ class ViewRender extends AbsRender
 		
 		$data = $model->getData();
 		
-		if( $this->requestType == Request::REQUEST_TYPE_BROSWER ){
-			return $this->getTemplateContent($data);
+		if( !$model instanceof ResultModel ){
+    		if( $this->requestType == Request::REQUEST_TYPE_BROSWER ){
+    			return $this->getTemplateContent($data);
+    		}
 		}
 		
 		$this->responseFormat = getApp()->defaultDataFormat;

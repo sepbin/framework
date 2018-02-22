@@ -43,6 +43,8 @@ class Request extends Base
 	const REQUEST_HTTP_POST = 'post';
 	const REQUEST_HTTP_PUT  = 'put';
 	const REQUEST_HTTP_DELETE = 'delete';
+	const REQUEST_HTTP_OPTIONS = 'options';
+	
 	
 	
 	

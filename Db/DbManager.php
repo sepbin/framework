@@ -194,7 +194,7 @@ class DbManager extends Base implements IFactoryEnable
 		$result = $this->driver->exec($sql);
 		
 		if( getApp()->isDebug() && $result === false ){
-			throw (new SqlException())->appendMsg( $this->driver->getError()[2] );
+			throw (new SqlException())->appendMsg( $this->driver->getError() .'['.$this->getLastCommand().']' );
 		}
 		
 		return $result;

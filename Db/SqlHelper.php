@@ -406,9 +406,13 @@ class SqlHelper extends Base
 			return $value;
 		}
 		
-		if( !get_magic_quotes_gpc() ){
-			$value = addslashes($value);
-		}
+// 		if( !get_magic_quotes_gpc() ){
+// 			$value = addslashes($value);
+// 			addcslashes($str, $charlist)
+// 		}
+
+		$value = str_replace("'", "''", $value);
+		
 		return "'$value'";
 		
 	}

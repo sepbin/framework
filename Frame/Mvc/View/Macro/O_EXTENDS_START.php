@@ -12,7 +12,7 @@ class O_EXTENDS_START
 			
 			if( !$this->manage->ignoreParent ){
 				ob_start(function($content){ 
-					$this->manage->putExtendContent(\''.$key.'\',$content); return "haha"; 
+					$this->manage->putExtendContent(\''.$key.'\',$content); return "error:'.$key.'"; 
 				});
 			}
 

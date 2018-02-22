@@ -52,7 +52,7 @@ class Mysql implements IDriver
 	
 	public function getError(){
 		
-		return $this->pdo->errorInfo();
+		return $this->pdo->errorInfo()[2];
 		
 	}
 	

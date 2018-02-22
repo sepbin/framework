@@ -40,7 +40,6 @@ class ConfigUtil
 		$config = parse_ini_string($content,true);
 		
 		foreach ( $config as $key=>$val ){
-			
 			if( strpos($key, '.') ){
 				DotName::set($this->config, $key, $val);
 			}else{

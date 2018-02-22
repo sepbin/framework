@@ -52,11 +52,14 @@ class Cookie extends Base implements IFactoryEnable
 		
 	}
 	
-	public function set( $name, $value, $expire=0, $path='/', $domain=null, $secure=false ){	
+	public function set( $name, $value, $expire=-1, $path='/', $domain=null, $secure=false ){	
 		
-		if( $expire == 0 ) $expire = $this->expire;
+		if( $expire == -1 ) $expire = $this->expire;
 		$name = $this->prefix . $name;
-		$expire = time() + $expire;
+		
+		if( $expire != 0 ){
+		  $expire = time() + $expire;
+		}
 		
 		if( is_object($value) || is_array($value) ){
 			$value = '[@'. base64_encode( json_encode( $value ) ).']';

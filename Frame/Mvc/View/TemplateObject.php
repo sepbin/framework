@@ -2,7 +2,7 @@
 namespace Sepbin\System\Frame\Mvc\View;
 
 use Sepbin\System\Util\HookRun;
-use Sepbin\System\Frame\Hook\IMvcTemplateHook;
+use Sepbin\System\Frame\Hook\IMvcTemplateObjectHook;
 
 class TemplateObject
 {
@@ -23,15 +23,14 @@ class TemplateObject
 	
 	private $_action;
 	
-	private $_data;
-	
+	public $_data;
 	
 	
 	function __construct( TemplateManager $manage ,$filename, array $data ){
 		
 		$this->manage = $manage;
 		$this->filename = $filename;
-		$this->_data = $data;
+		$this->_data = json_decode( json_encode( $data ) );
 		
 		$this->_module = $manage->controller->moduleName;
 		$this->_controller = $manage->controller->controllerName;
@@ -43,7 +42,7 @@ class TemplateObject
 	
 	public function getView(){
 		
-		HookRun::void(IMvcTemplateHook::class, 'tplObjectInit', $this);
+		HookRun::void(IMvcTemplateObjectHook::class, 'tplObjectInit', $this);
 		
 		return getApp()->getResponse()->getOut(function(){
 			$this->include($this->filename);
@@ -63,18 +62,18 @@ class TemplateObject
 	 */
 	function __get( $name ){
 		
-		if(!isset($this->_data[$name])){
+		if(!isset($this->_data->$name)){
 			trigger_error('模型中不包含'.$name.'属性 '.$this->filename, E_USER_WARNING);
 			return '';
 		}
 		
-		return $this->_data[$name];
+		return $this->_data->$name;
 		
 	}
 	
 	function __set( $name, $value ){
 		
-		$this->_data[$name] = $value;
+		$this->_data->$name = $value;
 		
 	}
 	

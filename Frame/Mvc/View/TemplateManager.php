@@ -12,6 +12,7 @@ use Sepbin\System\Util\Data\ClassName;
 use Sepbin\System\Util\Factory;
 use Sepbin\System\Util\IFactoryEnable;
 use Sepbin\System\Frame\Action;
+use Sepbin\System\Core\Exception\FileDisWrite;
 
 
 /**
@@ -35,7 +36,7 @@ class TemplateManager extends Base implements IFactoryEnable
 	 * 开发模式是否开启,如果为true将永远不会缓存
 	 * @var string
 	 */
-	public $dev = false;
+	public $dev = true;
 	
 	
 	/**
@@ -113,11 +114,14 @@ class TemplateManager extends Base implements IFactoryEnable
 		$this->styleDir = APP_DIR.'/View/'.$this->style;
 		$this->extension = $config->get('ext_name','html');
 		$this->parseEngine = $config->get('parse_engine',ArtTemplate::class);
-		$this->cacheDirName = $config->get('cache_dir','Cache');
-		HookRun::void(IMvcTemplateHook::class, 'tplManagerInit', $this);
-		
+		$this->cacheDirName = $config->get('cache_dir', DATA_DIR.'/template');
+		$this->cacheDirName = rtrim($this->cacheDirName,'/');
 		$this->stylePath = HTTP_ROOT.'/application/View/'.$this->style;
 		
+		if( !is_dir($this->cacheDirName) ){
+		    if( !is_writable( dirname($this->cacheDirName) ) ) throw (new FileDisWrite())->appendMsg( dirname($this->cacheDirName) );
+		    mkdir( $this->cacheDirName,0755,true );
+		}
 		
 	}
 	
@@ -126,6 +130,8 @@ class TemplateManager extends Base implements IFactoryEnable
 		$this->controller = $controller;
 		$this->action = $action;
 		$this->filename = $this->getFilename( $this->controller, $this->action );
+		
+		HookRun::void(IMvcTemplateHook::class, 'tplManagerInit', $this);
 		
 	}
 	
@@ -138,7 +144,7 @@ class TemplateManager extends Base implements IFactoryEnable
 	 * @return string
 	 */
 	private function getFilename( \Sepbin\System\Frame\AbsController $controller, string $action_name ) : string {
-		
+	    
 		$controller_name = $controller->moduleName.'/'.$controller->controllerName;
 		$filename = $this->styleDir.'/'.$controller_name.'/'.ClassName::camelToUnderline($action_name).'.'.$this->extension;
 		$filename = str_replace('\\', '/', $filename);
@@ -155,8 +161,11 @@ class TemplateManager extends Base implements IFactoryEnable
 	 */
 	private function getCacheFilename( string $filename ) : string{
 		
-		$filename = str_replace( $this->styleDir , $this->styleDir.'/'.$this->cacheDirName, $filename);
-		return str_replace('.'.$this->extension, '.php', $filename);
+	    $name = str_replace( APP_DIR.'/View', '', $filename);
+		$name = str_replace('.'.$this->extension, '.php', $name);
+		
+		$name = $this->cacheDirName . $name;
+		return $name;
 		
 	}
 	
@@ -225,7 +234,6 @@ class TemplateManager extends Base implements IFactoryEnable
 			throw (new TemplateFileNoFoundException())->appendMsg( $this->filename );
 		}
 		
-		
 		$this->basisCacheCallParseEngine( $this->filename );
 		$object = new TemplateObject($this, $this->getCacheFilename($this->filename), $data);
 		$content = $object->getView();
@@ -235,7 +243,9 @@ class TemplateManager extends Base implements IFactoryEnable
 			while( $this->isParent ){
 				$parentData = array();
 				$dispatchClass = 'SepApp\Application\\'.$this->parentModule .'\\'.$this->parentController.'Controller' ;
-				if( class_exists($dispatchClass) ){
+				
+				if( class_exists($dispatchClass) && method_exists($dispatchClass, $this->parentAction.'Action') ){
+					
 					/**
 					 * 
 					 * @var AbsController $instance
@@ -319,7 +329,14 @@ class TemplateManager extends Base implements IFactoryEnable
 	public function includeController( string $module_name, string $controller_name, string $action_name,...$params ){
 		
 		$dispatchClass = 'SepApp\Application\\'. $module_name .'\\'.$controller_name.'Controller' ;
+		/**
+		 * 
+		 * @var AbsController $controller
+		 */
 		$controller = Factory::get( $dispatchClass );
+		$controller->moduleName = $module_name;
+		$controller->controllerName = $controller_name;
+		$controller->actionName = $action_name;
 		$action = $action_name.'Action';
 		$filename = $this->getFilename($controller, $action_name);
 		$this->basisCacheCallParseEngine( $filename );

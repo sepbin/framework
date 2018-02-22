@@ -52,6 +52,16 @@ abstract class AbsController extends Base implements IFactoryEnable
 		
 	}
 	
+	protected function result( $status, $msg=NULL ){
+	    
+	    $model = new ResultModel();
+	    $model->status = $status;
+	    $model->msg = $msg;
+	    
+	    return $model;
+	    
+	}
+	
 	/**
 	 * 返回模块域的语言
 	 * @param string $message
