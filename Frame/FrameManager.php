@@ -46,13 +46,17 @@ class FrameManager extends Base implements IFactoryEnable, IRouteEnable
 	public function _init( \Sepbin\System\Util\FactoryConfig $config ){
 		
 		if( $config->check('default_action') ){
+		    
 			self::$action = $config->getStr('default_action');
+			
 		}
 		
 		if( $config->check('render') ){
 			
 			foreach ( $config->getArrStr('render') as $key => $item ){
+			    
 				self::addRender($key, $item);
+				
 			}
 			
 		}

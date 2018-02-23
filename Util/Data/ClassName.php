@@ -10,6 +10,9 @@ class ClassName
 	 * @return string
 	 */
 	static public function camelToUnderline(string $name):string{
+	    
+	    $name = lcfirst($name);
+	    
  		$tmp = array();
 		for ( $i=0; $i<strlen($name);$i++ ){
 			$ord = ord($name[$i]);
@@ -31,8 +34,10 @@ class ClassName
 	 * @param string $name
 	 * @return string
 	 */
-	static public function underlineToCamel(string $name):string{
+	static public function underlineToCamel(string $name, bool $ucfirst=false):string{
 		
+	    if( $ucfirst ) $name = ucfirst($name);
+	    
 		while ( false != ($pos = strpos($name, '_')) ){
 			$char = substr($name, $pos+1,1);
 			if( strlen($char) == 1 ){

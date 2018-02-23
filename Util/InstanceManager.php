@@ -2,6 +2,7 @@
 namespace Sepbin\System\Util;
 
 use Sepbin\System\Core\Base;
+
 /**
  * 单例管理器
  * @author joson

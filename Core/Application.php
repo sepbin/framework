@@ -256,18 +256,24 @@ class Application extends Base implements IFactoryEnable {
 			}
 			
 			$path = substr ( $path, strlen ( HTTP_ROOT ) );
+			
 			$path = str_replace ( '/index.php', '', $path );
 			$path = ltrim ( $path, '/' );
+			
 			if($path == ''){
 				$path = $this->defaultPath;
 			}
 		} else {
-			if (substr ( $_SERVER ['argv'] [1], 0, 1 ) == '-') {
+		    
+			if ( isset($_SERVER['argv'][1]) &&  substr ( $_SERVER ['argv'] [1], 0, 1 ) == '-' ) {
 				$path = '';
 			} else {
 				$path = isset ( $_SERVER ['argv'] [1] ) ? $_SERVER ['argv'] [1] : '';
 			}
+			
 		}
+		
+		
 		
 		$isFind = false;
 		

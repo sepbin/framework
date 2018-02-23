@@ -2,6 +2,9 @@
 namespace Sepbin\System\Frame\Mvc\View;
 
 
+use Sepbin\System\Util\HookRun;
+use Sepbin\System\Frame\Hook\ISyntaxHook;
+
 /**
  * 基础语义解析
  * @author joson
@@ -19,6 +22,8 @@ class BasicSyntax
 	
 	protected $content;
 	
+	protected $macro = array();
+	
 	
 	private $tmp = array();
 	
@@ -29,6 +34,30 @@ class BasicSyntax
 		
 		$this->manager = $manager;
 		
+		$this->addMacro(BasicMacro::class);
+		
+		HookRun::void(ISyntaxHook::class, 'init', $this);
+		
+	}
+	
+	
+	/**
+	 * 增加宏
+	 * @param string $name
+	 */
+	public function addMacro( string $macro_class_name ){
+	    
+	    $instance = new $macro_class_name( $this->manager );
+	    
+	    $r = new \ReflectionClass( $instance );
+	    $methods = $r->getMethods();
+	    
+	    foreach ( $methods as $item ){
+	        if($item->class == $macro_class_name && in_array( substr($item->name, 0,3) , ['__O','__M','__D']) ){
+	            $this->macro[ $item->name ] = $instance;
+	        }
+	    }
+	    
 	}
 	
 	
@@ -65,9 +94,12 @@ class BasicSyntax
 				}, $params);
 			}
 			
-			$class = 'Sepbin\System\Frame\Mvc\View\Macro\\'.$method;
-			if( class_exists($class) ){
-				return $class::parse( $this->manager, ...$params );
+			$method = '__'.$method;
+			
+			if( isset($this->macro[$method]) ){
+			    
+			    return $this->macro[$method]->$method( ...$params );
+			    
 			}
 			
 			return '';

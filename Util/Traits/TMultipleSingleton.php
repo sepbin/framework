@@ -10,7 +10,7 @@ trait TMultipleSingleton
 		
 		if( !isset(self::$_instance[$key]) ){
 			
-			$name = get_called_class();
+			$name = static::class;
 			self::$_instance[$key] = new $name;
 			
 			if( $callback ){

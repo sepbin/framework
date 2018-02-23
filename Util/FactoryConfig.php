@@ -3,6 +3,7 @@ namespace Sepbin\System\Util;
 
 use Sepbin\System\Util\Traits\TGetType;
 use Sepbin\System\Util\Exception\FactoryTypeException;
+use Sepbin\System\Util\Data\ClassName;
 
 class FactoryConfig
 {
@@ -52,7 +53,10 @@ class FactoryConfig
 	
 	public function getInstance( string $property , string $name, $check_type='' ){
 		
-		$instance = $name::getInstance( $this->namespace.'.'.$property.'_'.strtolower( substr($name, strrpos($name, '\\')+1) ), $this->file, $this->filePath );
+	    $config_name = substr($name, strrpos($name, '\\')+1);
+	    $config_name = ClassName::camelToUnderline($config_name);
+	    
+	    $instance = $name::getInstance( $this->namespace.'.'.$property.'_'.$config_name, $this->file, $this->filePath );
 		
 		if( $check_type != '' && !$instance instanceof $check_type ){
 		    throw ( new FactoryTypeException() )->appendMsg( $name.' 必须继承或实现 '. $check_type );

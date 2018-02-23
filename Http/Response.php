@@ -20,8 +20,6 @@ class Response extends Base implements IFactoryEnable
 	
 	const DATA_TYPE_TEXT = 'txt';
 	
-	
-	
 	private $contentType = 'text/html';
 	
 	/**
@@ -115,7 +113,9 @@ class Response extends Base implements IFactoryEnable
 	public function put( $buffer ){
 		
 		if( !is_string($buffer) && !is_array($buffer) ){
+		    
 			$buffer = var_export($buffer,true);
+			
 		}
 		
 		$this->buffer[] = $buffer;

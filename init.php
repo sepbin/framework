@@ -2,8 +2,13 @@
 use Sepbin\System\Util\ConfigUtil;
 use Sepbin\System\Core\Application;
 
+
 //项目根路径
-if(!defined('DOCUMENT_ROOT')) define('DOCUMENT_ROOT', dirname(get_included_files()[0]));
+if( !defined('DOCUMENT_ROOT')) define('DOCUMENT_ROOT', dirname(dirname(dirname(__DIR__))) );
+
+
+//对HTTP公开资源的目录路径
+if( !defined('PUBLIC_DIR') ) define('PUBLIC_DIR', DOCUMENT_ROOT.'/public');
 
 
 //项目应用路径
@@ -28,21 +33,37 @@ if(!defined('LIB_PREFIX')) define('LIB_PREFIX', 'SepLib\\');
 //项目应用顶级命名
 if(!defined('APP_PREFIX')) define('APP_PREFIX', 'SepApp\\');
 
-
 //获取http根路径
-function _findHttpRoot($path){
-	if( $path == substr($_SERVER['REQUEST_URI'], 0, strlen($path)) || $path == '' ){
-		return $path;
+$_findHttpRoot = function($path) use (&$_findHttpRoot){
+    
+    if(  $path == substr($_SERVER['REQUEST_URI'], 0, strlen($path)) || $path == '' ){
+	    return $path;
 	}else{
-		$path = substr($path, strpos($path, '/',1));
-		return _findHttpRoot( $path );
+	    $dot = strpos($path, '/',1);
+	    if( $dot !== false ){
+		   $path = substr($path, $dot );
+	    }else{
+	       $path = ''; 
+	    }
+		return $_findHttpRoot( $path );
 	}
-}
+};
+
+$_appendPublicPath = function( $path ){
+    if( $path == '' ) return '';
+    $check = substr($_SERVER['SCRIPT_FILENAME'], strlen(DOCUMENT_ROOT));
+    if( $check == '/public/index.php' ){
+        return $path.'/public';
+    }
+    
+};
+
 if( !empty($_SERVER['REQUEST_URI']) ){
-	define('HTTP_ROOT', _findHttpRoot(DOCUMENT_ROOT));
+	define('HTTP_ROOT', $_appendPublicPath($_findHttpRoot(DOCUMENT_ROOT)) );
 }else{
-	define('HTTP_ROOT', '');
+    define('HTTP_ROOT', '');
 }
+
 
 //--------------------------------------
 
@@ -53,7 +74,7 @@ if( !empty($_SERVER['REQUEST_URI']) ){
  * @return \Sepbin\System\Core\Application
  */
 function getApp(){
-    return \Sepbin\System\Core\Application::getInstance('application','application.ini');
+    return \Sepbin\System\Core\Application::getInstance('application','application.php');
 }
 
 
@@ -85,7 +106,9 @@ function request( Application $app = null ){
  * @param unknown $data
  */
 function dump( $data ){	
+    
 	getApp()->getResponse()->put($data);
+	
 }
 
 

@@ -22,7 +22,7 @@ class AES256 implements IEncrypt
 	public function _init( \Sepbin\System\Util\FactoryConfig $config ){
 		
 		$this->key = $config->get('key','qtjrljsdfkln32n4j89sdfgjkaw89df7345jkhklsadf89734534345sadfhjkl');
-		$this->iv = $config->get('iv','dsds439skcmslq23');
+		$this->iv = substr($config->get('iv','dsds439skcmslq23'), 0, 16 );
 		
 	}
 	

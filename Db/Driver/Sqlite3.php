@@ -16,7 +16,7 @@ class Sqlite3 implements IDriver
 	}
 	
 	public function _init(\Sepbin\System\Util\FactoryConfig $config){
-		
+	    
 	    try {
 	        $this->driver = new \SQLite3( DOCUMENT_ROOT.$config->getStr('database') );
 	    }catch (\Exception $e){
