@@ -27,7 +27,7 @@ class ConfigUtil
 	}
 	
 	
-	public function addIniFile( string $filename, string $path = CONFIG_DIR ) :void{
+	public function addIniFile( string $filename, string $path = CONFIG_DIR ){
 		
 		$fullname = FileUtil::combineFullName($filename, $path);
 		
@@ -53,7 +53,7 @@ class ConfigUtil
 	
 	
 	
-	public function addPhpFile( string $filename, string $path = CONFIG_DIR ) :void{
+	public function addPhpFile( string $filename, string $path = CONFIG_DIR ){
 		
 		$fullname = FileUtil::combineFullName($filename, $path);
 		
@@ -70,7 +70,7 @@ class ConfigUtil
 		
 	}
 	
-	public function addXmlFile( string $filename, string $path = CONFIG_DIR ) :void{
+	public function addXmlFile( string $filename, string $path = CONFIG_DIR ){
 		
 		$fullname = FileUtil::combineFullName($filename, $path);
 		
@@ -92,7 +92,7 @@ class ConfigUtil
 		
 	}
 	
-	public function addJsonFile( string $filename, string $path = CONFIG_DIR ) :void{
+	public function addJsonFile( string $filename, string $path = CONFIG_DIR ){
 		
 		$fullname = FileUtil::combineFullName($filename, $path);
 		
@@ -110,7 +110,7 @@ class ConfigUtil
 		
 	}
 	
-	public function addFile( string $filename, string $path = CONFIG_DIR ) : void {
+	public function addFile( string $filename, string $path = CONFIG_DIR ){
 		
 		$ext = FileUtil::getExtensionName($filename);
 		

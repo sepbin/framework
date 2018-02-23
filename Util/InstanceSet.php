@@ -225,7 +225,7 @@ class InstanceSet extends Base
 	}
 	
 	
-	private function callVoid( string $name, array $arg ):void{
+	private function callVoid( string $name, array $arg ){
 		
 		foreach ($this->collection as $item){
 			

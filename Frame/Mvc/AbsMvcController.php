@@ -30,7 +30,7 @@ abstract class AbsMvcController extends AbsController implements IMvcTemplateHoo
 	 *
 	 * @param \Sepbin\System\Frame\Mvc\View\TemplateManager $manager
 	 */
-	public function tplManagerInit( \Sepbin\System\Frame\Mvc\View\TemplateManager $manager ) : void{
+	public function tplManagerInit( \Sepbin\System\Frame\Mvc\View\TemplateManager $manager ){
 		
 	}
 	

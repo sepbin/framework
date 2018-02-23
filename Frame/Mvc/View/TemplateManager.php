@@ -124,7 +124,7 @@ class TemplateManager extends Base implements IFactoryEnable
 		
 	}
 	
-	public function setController( AbsController $controller, string $action ):void{
+	public function setController( AbsController $controller, string $action ){
 		
 		$this->controller = $controller;
 		$this->action = $action;
@@ -175,7 +175,7 @@ class TemplateManager extends Base implements IFactoryEnable
 	 * 调用设置的解析引擎进行模板渲染
 	 * @param string $content
 	 */
-	private function callParseEngine( string $filename ) : void{
+	private function callParseEngine( string $filename ) {
 		
 		$content = file_get_contents($filename);
 		

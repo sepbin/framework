@@ -153,7 +153,7 @@ class Request extends Base
 	/**
 	 * 把input的数据，当作参数格式传入统一参数
 	 */
-	public function putInputParam():void{
+	public function putInputParam(){
 		
 		$input = $this->getInput();
 		if(!empty($input)){
@@ -166,7 +166,7 @@ class Request extends Base
 	/**
 	 * 识别当前请求的HTTP类型
 	 */
-	private function spotHttpMethod():void{
+	private function spotHttpMethod(){
 		
 		$method = isset($_SERVER['REQUEST_METHOD'])? $_SERVER['REQUEST_METHOD'] : 'GET';
 		
@@ -205,7 +205,7 @@ class Request extends Base
 	 * 设置请求方式
 	 * @param string $requestType
 	 */
-	public function setRequestType( string $requestType ):void{
+	public function setRequestType( string $requestType ){
 		
 		$this->requestType = $requestType;
 		

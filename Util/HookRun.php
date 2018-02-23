@@ -5,7 +5,7 @@ class HookRun
 {
 	
 	
-	static public function void( string $name, string $method_name, ...$params ) : void{
+	static public function void( string $name, string $method_name, ...$params ){
 		
 		getApp()->hook($name, $method_name, InstanceSet::CALL_VOID, ...$params);
 		

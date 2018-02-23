@@ -90,7 +90,7 @@ class Response extends Base implements IFactoryEnable
 	 * 加入HTTP信息头
 	 * @param string $header
 	 */
-	public function addHeader( string $header ):void{
+	public function addHeader( string $header ){
 		header($header);
 	}
 	
@@ -127,7 +127,7 @@ class Response extends Base implements IFactoryEnable
 	 * @param \Closure $fun
 	 * @return string
 	 */
-	public function bufferOut(\Closure $func):void{
+	public function bufferOut(\Closure $func){
 		$this->put( $this->getOut($func) );
 	}
 	
@@ -143,7 +143,7 @@ class Response extends Base implements IFactoryEnable
 	/**
 	 * 输出缓冲
 	 */
-	public function flush():void{
+	public function flush(){
 		
 		$this->sendHeader();
 		if( $this->contentType == 'text/xml' || $this->contentType == 'application/json' ){

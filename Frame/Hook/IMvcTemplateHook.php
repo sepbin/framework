@@ -9,7 +9,7 @@ interface IMvcTemplateHook
 	 * 模板管理器初始化时
 	 * @param \Sepbin\System\Mvc\View\TemplateManager $manager
 	 */
-	public function tplManagerInit( \Sepbin\System\Frame\Mvc\View\TemplateManager $manager ) : void;
+	public function tplManagerInit( \Sepbin\System\Frame\Mvc\View\TemplateManager $manager );
 	
 	/**
 	 * 这个方法是在缓存视图之前触发

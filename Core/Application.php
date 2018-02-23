@@ -9,9 +9,9 @@ use Sepbin\System\Util\InstanceManager;
 use Sepbin\System\Util\IFactoryEnable;
 use Sepbin\System\Util\FactoryConfig;
 use Sepbin\System\Util\Factory;
-use Sepbin\System\Core\Exception\RouteDelegateException;
-use Sepbin\System\Core\Exception\NotFoundException;
 use Sepbin\System\Core\Hook\IApplicationHook;
+use Sepbin\System\Route\BasicRoute;
+use Sepbin\System\Route\IRoute;
 
 /**
  * 应用入口
@@ -73,32 +73,42 @@ class Application extends Base implements IFactoryEnable {
 	 */
 	public $defaultDataFormat = 'json';
 	
+	/**
+	 * 
+	 * @var IRoute
+	 */
+	private $route;
 	
 	private $process = array ();
+	
 	private $errHandler = array ();
+	
 	private $hook = array ();
-	private $rules = array ();
+	
 	
 	/**
 	 * 应用的请求对象
 	 * 
 	 * @var \Sepbin\System\Core\Request
 	 */
-	private $request;
+	public $request;
 	
 	/**
 	 * 应用的响应对象
 	 * 
 	 * @var \Sepbin\System\Http\Response
 	 */
-	private $response;
+	public $response;
+	
 	private $starttime;
 	private $startmemory;
 	
 	
 	
 	static public function getInstance(string $config_namespace = null, string $config_file = null, string $config_path = CONFIG_DIR): Application {
-		return Factory::get ( Application::class, $config_namespace, $config_file, $config_path );
+		
+	    return Factory::get ( Application::class, $config_namespace, $config_file, $config_path );
+	    
 	}
 	
 	public function _init(FactoryConfig $config) {
@@ -121,8 +131,23 @@ class Application extends Base implements IFactoryEnable {
 		
 		
 		$this->httpRewrite = $config->getBool ( 'rewrite', false );
-		
 		$this->defaultPath = $config->getStr('default_path','');
+		
+		
+		$route = $config->getStr('route',BasicRoute::class);
+		$this->route = new $route;
+		
+		
+		$routes = $config->getArr('routes');
+		
+		foreach ($routes as $item){
+		    if( is_array($item) ){
+		        
+		        $this->route->addRoute($item['rule'], $item['delegate'], isset($item['params'])?$item['params']:[] );
+		        
+		    }
+		}
+		
 		
 		if ($this->debug) {
 			$this->starttime = explode ( ' ', microtime () );
@@ -144,7 +169,7 @@ class Application extends Base implements IFactoryEnable {
 	 * @param string $interface_name 接口名称
 	 * @param string|object $hook_name_or_instance 注册的类名或实例
 	 */
-	public function registerHook(string $interface_name, $hook_name_or_instance): void {
+	public function registerHook(string $interface_name, $hook_name_or_instance) {
 		if (isset ( $this->hook [$interface_name] ) && is_string ( $hook_name_or_instance ) && in_array ( $hook_name_or_instance, $this->hook [$interface_name] )) {
 			
 			throw (new RepeatHookException ())->appendMsg ( $interface_name . ' -> ' . $hook_name_or_instance );
@@ -198,12 +223,14 @@ class Application extends Base implements IFactoryEnable {
 		_registerLib ( $namespace_pre, $dir );
 	}
 	
+	
 	public function addRoute($rule, $delegate, $params = array()) {
-		$this->rules [$rule] = array (
-				'delegate' => $delegate,
-				'params' => $params 
-		);
+	    
+	    $this->route->addRoute($rule, $delegate, $params);
+	    
 	}
+	
+	
 	private function setLang() {
 		date_default_timezone_set ( $this->dateTimezone );
 		setlocale ( LC_ALL, $this->language . '.' . $this->charset );
@@ -227,7 +254,7 @@ class Application extends Base implements IFactoryEnable {
 		
 		$this->setLang ();
 		
-		$this->route ();
+		$this->route->route();
 		
 		$this->hook ( IApplicationHook::class, 'applicationEnd', InstanceSet::CALL_VOID, $this );
 		
@@ -238,122 +265,6 @@ class Application extends Base implements IFactoryEnable {
 		}
 		
 		$this->response->flush ();
-	}
-	
-	
-	/**
-	 * 执行路由
-	 */
-	private function route() {
-		if ($this->request->getRequestType () != Request::REQUEST_TYPE_CONSOLE) {
-			if ($_SERVER ['PHP_SELF']) {
-				$path = $_SERVER ['PHP_SELF'];
-			} else {
-				$path = $_SERVER ['REQUEST_URI'];
-				if (strpos ( $path, '?' ) !== false) {
-					$path = substr ( $path, 0, strpos ( $path, '?' ) );
-				}
-			}
-			
-			$path = substr ( $path, strlen ( HTTP_ROOT ) );
-			
-			$path = str_replace ( '/index.php', '', $path );
-			$path = ltrim ( $path, '/' );
-			
-			if($path == ''){
-				$path = $this->defaultPath;
-			}
-		} else {
-		    
-			if ( isset($_SERVER['argv'][1]) &&  substr ( $_SERVER ['argv'] [1], 0, 1 ) == '-' ) {
-				$path = '';
-			} else {
-				$path = isset ( $_SERVER ['argv'] [1] ) ? $_SERVER ['argv'] [1] : '';
-			}
-			
-		}
-		
-		
-		
-		$isFind = false;
-		
-		foreach ( $this->rules as $rule => $run ) {
-			
-			if (false !== ($result = $this->match ( $rule, $path ))) {
-				
-				if (is_callable ( $run ['delegate'] )) {
-					
-					$isFind = true;
-					$run ['delegate'] ();
-				} elseif (! empty ( $run ['delegate'] )) {
-					
-					$isFind = true;
-					$delegate = Factory::getForString ( $run ['delegate'] );
-					
-					if (! $delegate instanceof IRouteEnable) {
-						throw (new RouteDelegateException ())->appendMsg ( $run ['delegate'] );
-					}
-					
-					if (! empty ( $run ['params'] )) {
-						$result = array_merge ( $result, $run ['params'] );
-					}
-					
-					$delegate->RouteMapper ( $result );
-				}
-				break;
-			}
-		}
-		
-		if (! $isFind && ! empty ( $this->rules )) {
-			throw (new NotFoundException ())->appendMsg ( $path );
-		}
-	}
-	
-	
-	/**
-	 * 匹配路由规则
-	 * @param unknown $rule
-	 * @param unknown $path
-	 * @return array|boolean|mixed[]
-	 */
-	private function match($rule, $path) {
-		$result = array ();
-		
-		if ($rule == '')
-			return $result;
-		
-		if ($this->request->getRequestType () != Request::REQUEST_TYPE_CONSOLE) {
-			if (substr ( $rule, 0, 7 ) == 'host://') {
-				$host = $_SERVER ['HTTP_HOST'];
-			} else {
-				$host = substr ( $rule, 0, strpos ( $rule, '://' ) );
-			}
-			if ($host != $_SERVER ['HTTP_HOST']) return false;
-		} else {
-			if (substr ( $rule, 0, 6 ) != 'cli://') return false;
-		}
-		
-		$rule = substr ( $rule, strpos ( $rule, '://' ) + 3 );
-		
-		if ($rule == '' && $path == '') return $result;
-		elseif ($rule == '') return false;
-		
-		$ruleTmp = explode ( '/', $rule );
-		$pathTmp = explode ( '/', $path );
-		
-		if (count ( $ruleTmp ) != count ( $pathTmp )) return false;
-		
-		for($i = 0; $i < count ( $ruleTmp ); $i ++) {
-			if (strpos ( $ruleTmp [$i], '{' ) !== false && strrpos ( $ruleTmp [$i], '}' ) !== false) {
-				$paramKey = substr ( $ruleTmp [$i], 1, strrpos ( $ruleTmp [$i], '}' ) - 1 );
-				$this->request->param->put ( $paramKey, $pathTmp [$i] );
-				$result [$paramKey] = $pathTmp [$i];
-			} elseif ($ruleTmp [$i] != $pathTmp [$i]) {
-				return false;
-			}
-		}
-		
-		return $result;
 	}
 	
 	
@@ -425,7 +336,7 @@ class Application extends Base implements IFactoryEnable {
 	/**
 	 * 输出debug模式下的辅助信息
 	 */
-	private function outAssist(){
+	protected function outAssist(){
 		
 		if( !$this->debugInfo ) return ;
 		

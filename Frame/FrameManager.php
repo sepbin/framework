@@ -122,7 +122,7 @@ class FrameManager extends Base implements IFactoryEnable, IRouteEnable
     				$def = null;
     				$type = null;
     				if( $item->hasType() ){
-    				    $type = $item->getType()->getName();
+    				    $type = $item->getType().'';
     				}
     				
     				if( $item->isDefaultValueAvailable() ){
