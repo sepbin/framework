@@ -1,6 +1,8 @@
 <?php
 namespace Sepbin\System\Core;
 
+use Sepbin\System\Util\ConsoleUtil;
+
 class AppInfoView extends Base
 {
     
@@ -46,15 +48,36 @@ class AppInfoView extends Base
     
     static public function string(){
     	
-    	echo "\n----------------------------------------------\n";
-    	echo "debug info\n";
-    	echo "run time:".self::$runtime."s  memory:".self::$runmemory."M\n";
-    	echo "----------------------------------------------\n";
+    	dump('');
+    	dump('');
+    	dump( ConsoleUtil::text('debug info',60,ConsoleUtil::COLOR_YELLOW, ConsoleUtil::COLOR_WHITE) );
+    	dump ( ConsoleUtil::text( "run time:".self::$runtime."s  memory:".self::$runmemory."M", 60, ConsoleUtil::COLOR_BLACK, ConsoleUtil::COLOR_WHITE ) );
+    	dump('');
+    	if( !empty(AppInfo::$log) ){
+	    	foreach ( AppInfo::$log as $item ){
+				dump( $item->msg."\n" );
+	    	}
+    	}else{
+    		dump('good. no errors');	
+    	}
+    	dump('');
+    	dump( ConsoleUtil::text('sepbin version '.getApp()->version,60,ConsoleUtil::COLOR_YELLOW, ConsoleUtil::COLOR_WHITE) );
+    	
+    }
+    
+    static public function data(){
+    	
+    	$data = [ 'debug_info' => [] ];
+    	
+    	$data['debug_info']['run_time'] = self::$runtime;
+    	$data['debug_info']['memory'] = self::$runmemory.'M';
+    	$data['debug_info']['warnings'] = [];
     	foreach ( AppInfo::$log as $item ){
-    		echo $item->msg."\n";
+    		$data['debug_info']['warnings'][] = $item->msg;
     	}
     	
-    	echo "\n";
+    	dump($data);
+    	
     }
     
 }

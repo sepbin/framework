@@ -7,7 +7,6 @@ use Sepbin\System\Util\Factory;
 use Sepbin\System\Cache\Storage\Files;
 use Sepbin\System\Util\Traits\TGetType;
 use Sepbin\System\Cache\Storage\ACache;
-use Sepbin\System\Cache\Exception\CacheDriverError;
 
 class CacheManager extends Base implements IFactoryEnable
 {
@@ -31,12 +30,10 @@ class CacheManager extends Base implements IFactoryEnable
     public function _init( \Sepbin\System\Util\FactoryConfig $config ){
         
         $this->expire = $config->getInt('expire',1800);
-        $driver = $config->getStr('driver',Files::class);
-        $this->driver = $config->getInstance('driver', $driver);
         
-        if( !$this->driver instanceof ACache ){
-            throw ( new CacheDriverError() )->appendMsg( $driver );
-        }
+        $driver = $config->getStr('driver',Files::class);
+        
+        $this->driver = $config->getClass('driver',Files::class, ACache::class);
         
     }
     
@@ -81,6 +78,17 @@ class CacheManager extends Base implements IFactoryEnable
     public function delete( $key ){
         
         return $this->driver->delete( $key );
+        
+    }
+    
+    
+    /**
+     * 检查一个键是否存在
+     * @param string $key
+     */
+    public function exists( $key ) : bool{
+        
+        return true;
         
     }
     

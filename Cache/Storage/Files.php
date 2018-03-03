@@ -2,7 +2,7 @@
 namespace Sepbin\System\Cache\Storage;
 
 use Sepbin\System\Util\Factory;
-use Sepbin\System\Core\Exception\FileDisWrite;
+use Sepbin\System\Core\Exception\FileCantWriteException;
 
 class Files extends ACache
 {
@@ -24,7 +24,7 @@ class Files extends ACache
         
         if( !is_dir($this->saveDir) ){
             if( !is_writable( dirname($this->saveDir) ) ){
-                 throw (new FileDisWrite())->appendMsg( dirname($this->saveDir) );
+                 throw (new FileCantWriteException())->appendMsg( dirname($this->saveDir) );
             }
             mkdir($this->saveDir,0755,true);
         }

@@ -2,6 +2,7 @@
 namespace Sepbin\System\Core;
 
 use Sepbin\System\Util\ArrayUtil;
+use Sepbin\System\Util\ConsoleUtil;
 
 class AppExceptionView extends Base
 {
@@ -92,7 +93,7 @@ class AppExceptionView extends Base
     }
     
     
-    static public function json(){
+    static public function data(){
     	
     	$msg = array(
     			'errcode' => self::$err->getCode(),
@@ -107,24 +108,22 @@ class AppExceptionView extends Base
 	    	));
     	}
     	
-    	echo json_encode( $msg );
+    	dump($msg);
     	
     }
     
     static public function string(){
     	
-    	echo "----------------------------------------------\n";
-    	echo "throw exception\n";
-    	echo "----------------------------------------------\n";
-    	echo "errcode:".self::$err->getCode()."\n";
-    	echo "message:".self::$err->getMessage()."\n";
-    	
+    	dump('');
+    	dump('');
+    	dump( ConsoleUtil::text(' throw exception',60,ConsoleUtil::COLOR_YELLOW, ConsoleUtil::COLOR_WHITE) );
+    	dump( ConsoleUtil::text(' errcode',10,ConsoleUtil::COLOR_WHITE,ConsoleUtil::COLOR_BLACK). ConsoleUtil::text('',2) . ConsoleUtil::text( self::$err->getCode() ) );
+    	dump( ConsoleUtil::text(' message',10,ConsoleUtil::COLOR_WHITE,ConsoleUtil::COLOR_BLACK). ConsoleUtil::text('',2) . ConsoleUtil::text( self::$err->getMessage() ) );
     	if( self::$app->isDebug() ){
-    		echo "file:".self::$err->getFile()."\n";
-    		echo "line:".self::$err->getLine()."\n";
+    		dump( ConsoleUtil::text(' file',10,ConsoleUtil::COLOR_WHITE,ConsoleUtil::COLOR_BLACK). ConsoleUtil::text('',2) . ConsoleUtil::text( self::$err->getFile() ) );
+    		dump( ConsoleUtil::text(' line',10,ConsoleUtil::COLOR_WHITE,ConsoleUtil::COLOR_BLACK). ConsoleUtil::text('',2) . ConsoleUtil::text( self::$err->getLine() ) );
     	}
-    	
-    	echo "----------------------------------------------\n";
+    	dump( ConsoleUtil::text(' sepbin version '.getApp()->version,60,ConsoleUtil::COLOR_YELLOW, ConsoleUtil::COLOR_WHITE) );
     	
     }
     

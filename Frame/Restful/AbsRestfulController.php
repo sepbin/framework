@@ -1,14 +1,12 @@
 <?php
 namespace Sepbin\System\Frame\Restful;
 
-
-use Sepbin\System\Frame\AbsController;
 use Sepbin\System\Frame\Hook\IMvcRouteHook;
 use Sepbin\System\Core\Request;
 use Sepbin\System\Frame\Model;
-use Sepbin\System\Frame\FrameManager;
+use Sepbin\System\Frame\Mvc\AbsMvcController;
 
-abstract class AbsRestfulController extends AbsController implements IMvcRouteHook
+abstract class AbsRestfulController extends AbsMvcController implements IMvcRouteHook
 {
     
     public function _init(\Sepbin\System\Util\FactoryConfig $config){
@@ -22,9 +20,10 @@ abstract class AbsRestfulController extends AbsController implements IMvcRouteHo
         
         if( $action != 'index' ) return $action;
         
+        
         if( getApp()->getRequest()->getHttpMethod() == Request::REQUEST_HTTP_GET ){
             
-            return 'index';
+            return 'read';
             
         }
         

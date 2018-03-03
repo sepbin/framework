@@ -18,13 +18,6 @@ abstract class AbsRender extends Base
 	public $requestType;
 	
 	
-	/**
-	 * 渲染格式
-	 * @var string
-	 */
-	public $responseFormat = 'html';
-	
-	
 	function __construct(){
 		
 		$this->requestType = getApp()->getRequest()->getRequestType();

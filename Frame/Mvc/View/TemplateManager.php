@@ -12,7 +12,8 @@ use Sepbin\System\Util\Data\ClassName;
 use Sepbin\System\Util\Factory;
 use Sepbin\System\Util\IFactoryEnable;
 use Sepbin\System\Frame\Action;
-use Sepbin\System\Core\Exception\FileDisWrite;
+use Sepbin\System\Core\Exception\FileCantWriteException;
+
 
 
 /**
@@ -118,8 +119,8 @@ class TemplateManager extends Base implements IFactoryEnable
 		$this->stylePath = HTTP_ROOT.'/view/'.$this->style;
 		
 		if( !is_dir($this->cacheDirName) ){
-		    if( !is_writable( dirname($this->cacheDirName) ) ) throw (new FileDisWrite())->appendMsg( dirname($this->cacheDirName) );
-		    mkdir( $this->cacheDirName,0755,true );
+		    if( !is_writable( dirname($this->cacheDirName) ) ) throw (new FileCantWriteException())->appendMsg( dirname($this->cacheDirName) );
+		    mkdir( $this->cacheDirName, 0777, true );
 		}
 		
 	}
@@ -185,10 +186,6 @@ class TemplateManager extends Base implements IFactoryEnable
 		$tempEngine = new $this->parseEngine( $this, $content );
 		
 		$content = $tempEngine->getContent();
-		
-		if( !is_writeable( $this->styleDir ) ){
-			throw (new CacheCantWriteException())->appendMsg( $this->styleDir );
-		}
 		
 		$cacheFilename = $this->getCacheFilename($filename);
 		$cacheDir = dirname($cacheFilename);

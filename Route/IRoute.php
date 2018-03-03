@@ -7,6 +7,6 @@ interface IRoute
     
     public function addRoute($rule, $delegate, $params = array()) ;
     
-    public function route();
+    public function route( $host, $path );
     
 }

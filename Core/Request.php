@@ -94,47 +94,67 @@ class Request extends Base
 			
 		}else{
 			
-			$args = $_SERVER['argv'];
-			unset($args[0]);
-			
-			$params = array();
-			
-			$isKey = function($arg){
-				if( substr($arg, 0, 1) == '-' || substr($arg, 0, 2) == '--' ){
-					return true;
-				}
-				return false;
-			};
-			
-			for( $i=1; $i<count($args)+1; $i++ ){
-				if( $isKey( $args[$i] ) ){
-					$result = preg_match('/-(\w+)=(.+)/', $args[$i],$matches);
-					if($result){
-						$params[ $matches[1] ] = $matches[2]; 
-						continue;
-					}
-					
-					$args[$i] = str_replace('-', '', $args[$i]);
-					
-					if( !isset($args[$i+1]) ){
-						$params[ $args[$i] ] = true;
-						continue;
-					}
-					
-					if( $isKey( $args[$i+1] ) ){
-						$params[ $args[$i] ] = true;
-					}else{
-						$params[ $args[$i] ] = $args[$i+1];
-						$i++;
-					}
-					
-				}
-			}
-			$this->param = new RequestParam( $params );
+			$this->param = new RequestParam( $this->getConsoleParams() );
 			
 		}
 		
 		$this->requestLang = getApp()->defaultLang;
+		
+	}
+	
+	
+	private function getConsoleParams(){
+		
+		$args = $_SERVER['argv'];
+		
+		unset($args[0]);
+		
+		$params = array();
+		
+		
+		
+		$isKey = function($arg){
+			if( substr($arg, 0, 1) == '-' || substr($arg, 0, 2) == '--' ){
+				
+				if( $arg == '-command' || $arg == '--command' ){
+					return false;
+				}
+				
+				return true;
+			}
+			return false;
+		};
+		
+		if( !empty($args[1]) && !empty($args[2]) && !$isKey($args[1]) && !$isKey($args[2]) ){
+			$params['command'] = $args[2];
+		}
+		
+		for( $i=1; $i<count($args)+1; $i++ ){
+			if( $isKey( $args[$i] ) ){
+				$result = preg_match('/-(\w+)=(.+)/', $args[$i],$matches);
+				if($result){
+					$params[ $matches[1] ] = $matches[2];
+					continue;
+				}
+				
+				$args[$i] = str_replace('-', '', $args[$i]);
+				
+				if( !isset($args[$i+1]) ){
+					$params[ $args[$i] ] = true;
+					continue;
+				}
+				
+				if( $isKey( $args[$i+1] ) ){
+					$params[ $args[$i] ] = true;
+				}else{
+					$params[ $args[$i] ] = $args[$i+1];
+					$i++;
+				}
+			}
+		}
+		
+		
+		return $params;
 		
 	}
 	

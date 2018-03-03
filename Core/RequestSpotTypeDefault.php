@@ -25,6 +25,12 @@ class RequestSpotTypeDefault implements IRequestSpotTypeHook
 					
 		}
 		
+		if( !empty($_GET['post']) ){
+			
+			return Request::REQUEST_TYPE_POST;
+			
+		}
+		
 		return Request::REQUEST_TYPE_BROSWER;
 		
 	}

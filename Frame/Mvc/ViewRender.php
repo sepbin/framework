@@ -20,7 +20,9 @@ class ViewRender extends AbsRender
     		}
 		}
 		
-		$this->responseFormat = getApp()->defaultDataFormat;
+		if( $this->requestType == Request::REQUEST_TYPE_CONSOLE ){
+			return $data;
+		}
 		
 		return $data;
 		
@@ -38,10 +40,9 @@ class ViewRender extends AbsRender
 		$template->setController($this->controller, $this->actionName);
 		
 		if( $template->checkTemplate() ){
+		    $this->responseFormat = 'html';
 			return $template->getContent( $data );
 		}
-		
-		$this->responseFormat = 'html';
 		
 		return $data;
 		

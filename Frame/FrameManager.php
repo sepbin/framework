@@ -32,7 +32,6 @@ class FrameManager extends Base implements IFactoryEnable, IRouteEnable
 	static public $render = array();
 	
 	
-	
 	static public function getInstance( string $config_namespace=null, string $config_file=null, string $config_path=CONFIG_DIR ):FrameManager{
 		
 		if($config_namespace == null) $config_namespace = 'mvc';
@@ -60,6 +59,8 @@ class FrameManager extends Base implements IFactoryEnable, IRouteEnable
 			}
 			
 		}
+		
+		FrameManager::addRender(RedirectModel::class, RedirectRender::class);
 		
 	}
 	
@@ -104,7 +105,7 @@ class FrameManager extends Base implements IFactoryEnable, IRouteEnable
 	 */
 	public function dispatch(){
 		
-		$action = Action::get(self::$module, self::$controller);
+		$action = Action::get(self::$module, self::$controller)->setRequestType( getApp()->request->getRequestType() );
 		
 		self::$action = HookRun::tunnel(IMvcRouteHook::class, 'ActionBefore', self::$action);
 		
@@ -146,7 +147,8 @@ class FrameManager extends Base implements IFactoryEnable, IRouteEnable
 		}
 		
 		$result = $action->$actionName(...$requestParams);
-		getApp()->getResponse()->setContentType( $action->getLastRender()->responseFormat );
+		
+// 		getApp()->getResponse()->setContentType( $action->getLastRender()->responseFormat );
 		
 		return $result;
 	}

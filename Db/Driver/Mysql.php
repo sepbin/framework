@@ -2,6 +2,7 @@
 namespace Sepbin\System\Db\Driver;
 
 use Sepbin\System\Util\Factory;
+use Sepbin\System\Core\Exception\ExtensionException;
 
 class Mysql implements IDriver
 {
@@ -20,6 +21,10 @@ class Mysql implements IDriver
 	
 	public function _init(\Sepbin\System\Util\FactoryConfig $config){
 		
+	    if( !class_exists('\PDO') ){
+	        throw (new ExtensionException())->appendMsg('php-pdo');
+	    }
+	    
 		$host = $config->getStr('host');
 		$dbname = $config->getStr('database');
 		$user = $config->getStr('user');

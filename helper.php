@@ -2,14 +2,21 @@
 use Sepbin\System\Util\ConfigUtil;
 use Sepbin\System\Core\Application;
 use Sepbin\System\Core\RequestParam;
+use Sepbin\System\Http\HttpResponse;
+
 
 /**
  * 获取application实例
  * @return \Sepbin\System\Core\Application
  */
 function getApp() : Application{
+    
     $appName = config()->getStr('app_instance',\Sepbin\System\Core\Application::class);
-    return $appName::getInstance('application','application.php');
+    
+    $instance = $appName::getInstance('application');
+    
+    return $instance;
+    
 }
 
 
@@ -27,12 +34,23 @@ function config() : ConfigUtil{
 /**
  * 获取请求参数实例
  * @param Application $app
- * @return \Sepbin\System\Http\RequestParam
+ * @return \Sepbin\System\Core\RequestParam
  */
 function request() : RequestParam{
     
     return getApp()->getRequest()->param;
     
+}
+
+
+/**
+ * 获取http响应单例
+ * @return HttpResponse
+ */
+function getHttp() : HttpResponse{
+	
+	return HttpResponse::getInstance('http');
+	
 }
 
 
@@ -50,9 +68,9 @@ function dump( $data ){
 
 /**
  * 获取语言
- * @param unknown $message
- * @param unknown $domain
- * @param unknown ...$params
+ * @param string $message
+ * @param string $domain
+ * @param mixed ...$params
  * @return string
  */
 function _lang( $message, $domain, ...$params ){

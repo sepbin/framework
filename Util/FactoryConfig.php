@@ -37,13 +37,21 @@ class FactoryConfig
 		
 	}
 	
-	public function check( string $name ){
+	/**
+	 * 检查一个配置是否存在
+	 * @param string $name
+	 * @return bool
+	 */
+	public function check( string $name ) : bool{
 		
 		return isset($this->config[$name]);
 		
 	}
 	
-	
+	/**
+	 * 获取当前使用的配置命名
+	 * @return string
+	 */
 	public function getNamespace(){
 		
 		return $this->namespace;
@@ -51,12 +59,12 @@ class FactoryConfig
 	}
 	
 	
-	public function getInstance( string $property , string $name, $check_type='' ){
+	public function getInstance( string $name_pre , string $name, $check_type='' ){
 		
 	    $config_name = substr($name, strrpos($name, '\\')+1);
 	    $config_name = ClassName::camelToUnderline($config_name);
 	    
-	    $instance = $name::getInstance( $this->namespace.'.'.$property.'_'.$config_name, $this->file, $this->filePath );
+	    $instance = $name::getInstance( $this->namespace.'.'.$name_pre.'_'.$config_name, $this->file, $this->filePath );
 		
 		if( $check_type != '' && !$instance instanceof $check_type ){
 		    throw ( new FactoryTypeException() )->appendMsg( $name.' 必须继承或实现 '. $check_type );
@@ -64,6 +72,22 @@ class FactoryConfig
 		
 		return $instance;
 		
+	}
+	
+	
+	/**
+	 * 获取配置构造的嵌入类实例
+	 * @param string $name
+	 * @param string $default
+	 * @param string $check_type
+	 * @return string
+	 */
+	public function getClass( string $name, $default='', $check_type='' ){
+	    
+	    $conf = $this->get($name,$default);
+	    
+	    return $this->getInstance($name, $conf, $check_type);
+	    
 	}
 	
 }

@@ -2,7 +2,6 @@
 
 namespace Sepbin\System\Core;
 
-use Sepbin\System\Http\Response;
 use Sepbin\System\Core\Exception\RepeatHookException;
 use Sepbin\System\Util\InstanceSet;
 use Sepbin\System\Util\InstanceManager;
@@ -12,6 +11,7 @@ use Sepbin\System\Util\Factory;
 use Sepbin\System\Core\Hook\IApplicationHook;
 use Sepbin\System\Route\BasicRoute;
 use Sepbin\System\Route\IRoute;
+use Sepbin\System\Core\Exception\RepeatApplicationException;
 
 /**
  * 应用入口
@@ -25,6 +25,8 @@ class Application extends Base implements IFactoryEnable {
 	private $debug = true;
 	
 	private $debugInfo = true;
+	
+	public $version = '3.0.1-alpha';
 	
 	/**
 	 * 时区
@@ -68,6 +70,12 @@ class Application extends Base implements IFactoryEnable {
 	
 	
 	/**
+	 * 默认使用的协议
+	 * @var string
+	 */
+	public $defaultScheme = 'http';
+	
+	/**
 	 * 自动转换模型时的默认格式
 	 * @var string
 	 */
@@ -100,10 +108,19 @@ class Application extends Base implements IFactoryEnable {
 	 */
 	public $response;
 	
+	
+	
 	private $starttime;
 	private $startmemory;
 	
 	
+	function __construct(){
+	    static $instance;
+	    if( $instance != null ){
+	        throw new RepeatApplicationException();
+	    } 
+	    $instance = 1;
+	}
 	
 	static public function getInstance(string $config_namespace = null, string $config_file = null, string $config_path = CONFIG_DIR): Application {
 		
@@ -112,6 +129,10 @@ class Application extends Base implements IFactoryEnable {
 	}
 	
 	public function _init(FactoryConfig $config) {
+	    
+	    set_error_handler ( array ( $this, 'error' ) );
+	    set_exception_handler ( array ( $this, 'exception' ) );
+	    
 		$this->debug = $config->getBool ( 'debug', true );
 		$this->debugInfo = $config->getBool('debug_info', false);
 		$this->charset = $config->getStr ( 'charset', 'utf8' );
@@ -130,13 +151,13 @@ class Application extends Base implements IFactoryEnable {
 		}
 		
 		
+		
 		$this->httpRewrite = $config->getBool ( 'rewrite', false );
 		$this->defaultPath = $config->getStr('default_path','');
-		
+		$this->defaultScheme = $config->getStr('default_scheme', 'http');
 		
 		$route = $config->getStr('route',BasicRoute::class);
 		$this->route = new $route;
-		
 		
 		$routes = $config->getArr('routes');
 		
@@ -149,17 +170,20 @@ class Application extends Base implements IFactoryEnable {
 		}
 		
 		
+		$hooks = $config->getArr('hooks');
+		foreach ($hooks as $interface_name => $instance){
+		    $this->registerHook($interface_name, $instance);
+		}
+		
+		
 		if ($this->debug) {
 			$this->starttime = explode ( ' ', microtime () );
 			$this->startmemory = memory_get_usage ();
 		}
 		
 		
-		$this->request = new Request ();
-		$this->response = Response::getInstance ( 'response' );
-		
-		set_error_handler ( array ( $this, 'error' ) );
-		set_exception_handler ( array ( $this, 'exception' ) );
+		$this->request = new Request();
+		$this->response = new Response();
 		
 	}
 	
@@ -169,13 +193,18 @@ class Application extends Base implements IFactoryEnable {
 	 * @param string $interface_name 接口名称
 	 * @param string|object $hook_name_or_instance 注册的类名或实例
 	 */
-	public function registerHook(string $interface_name, $hook_name_or_instance) {
-		if (isset ( $this->hook [$interface_name] ) && is_string ( $hook_name_or_instance ) && in_array ( $hook_name_or_instance, $this->hook [$interface_name] )) {
+	final public function registerHook(string $interface_name, $hook_name_or_instance) {
+	    
+		if (isset ( $this->hook [$interface_name] ) 
+		    && is_string ( $hook_name_or_instance ) 
+		    && in_array ( $hook_name_or_instance, $this->hook [$interface_name] )) {
 			
 			throw (new RepeatHookException ())->appendMsg ( $interface_name . ' -> ' . $hook_name_or_instance );
+			
 		}
 		
 		$this->hook [$interface_name] [] = $hook_name_or_instance;
+		
 	}
 	
 	/**
@@ -185,8 +214,10 @@ class Application extends Base implements IFactoryEnable {
 	 * @param \Closure $func        	
 	 * @return void
 	 */
-	public function registerErrorHandler(int $error_code, \Closure $func) {
+	final public function registerErrorHandler(int $error_code, \Closure $func) {
+	    
 		$this->errHandler [$error_code] = $func;
+		
 	}
 	
 	/**
@@ -198,7 +229,7 @@ class Application extends Base implements IFactoryEnable {
 	 * @param unknown ...$params        	
 	 * @return void|array
 	 */
-	public function hook(string $name, string $method_name, int $call_type, ...$params) {
+	final public function hook(string $name, string $method_name, int $call_type, ...$params) {
 		
 		$set = new InstanceSet ( $name, $call_type );
 		$instanceManager = InstanceManager::getInstance ();
@@ -219,14 +250,27 @@ class Application extends Base implements IFactoryEnable {
 		return $set->$method_name ( ...$params );
 	}
 	
-	public function registerLib($namespace_pre, $dir) {
+	
+	/**
+	 * 注册类库
+	 * @param string $namespace_pre    命名空间前缀
+	 * @param string $dir              物理路径
+	 */
+	final public function registerLib($namespace_pre, $dir) {
 		_registerLib ( $namespace_pre, $dir );
 	}
 	
 	
-	public function addRoute($rule, $delegate, $params = array()) {
+	/**
+	 * 增加路由
+	 * @param string $rule                 规则
+	 * @param string|\Closure $delegate    响应方法
+	 * @param array $params                参数
+	 * @param array $restrict              限定
+	 */
+	final public function addRoute($rule, $delegate, $params = array(), $restrict = array()) {
 	    
-	    $this->route->addRoute($rule, $delegate, $params);
+	    $this->route->addRoute($rule, $delegate, $params, $restrict);
 	    
 	}
 	
@@ -243,18 +287,62 @@ class Application extends Base implements IFactoryEnable {
 		bind_textdomain_codeset ( 'Application', getApp ()->charset );
 	}
 	
+	
+	
 	/**
 	 * 开始运行
 	 * 
 	 * @return null
 	 */
-	public function run() {
+	final public function run() {
 		
 		$this->hook ( IApplicationHook::class, 'applicationStart', InstanceSet::CALL_VOID, $this );
 		
 		$this->setLang ();
 		
-		$this->route->route();
+		if (getApp()->request->getRequestType () != Request::REQUEST_TYPE_CONSOLE) {
+			
+			if ($_SERVER ['PHP_SELF']) {
+				$path = $_SERVER ['PHP_SELF'];
+			} else {
+				$path = $_SERVER ['REQUEST_URI'];
+				if (strpos ( $path, '?' ) !== false) {
+					$path = substr ( $path, 0, strpos ( $path, '?' ) );
+				}
+			}
+			
+			$path = substr ( $path, strlen ( HTTP_ROOT ) );
+			
+			$path = str_replace ( '/index.php', '', $path );
+			$path = ltrim ( $path, '/' );
+			
+			if($path == ''){
+				$path = getApp()->defaultPath;
+			}
+			
+			$host = $_SERVER['HTTP_HOST'];
+			
+		} else {
+			
+			if ( isset($_SERVER['argv'][1]) &&  substr ( $_SERVER ['argv'] [1], 0, 1 ) == '-' ) {
+				$path = '';
+			} else {
+				$path = isset ( $_SERVER ['argv'] [1] ) ? $_SERVER ['argv'] [1] : '';
+			}
+			
+			$simulation = request()->get('simulation',false);
+			
+			if( !$simulation && !is_string($simulation) ){
+				$host = 'cli';
+			}else{
+				$host = $simulation;
+			}
+			
+			
+		}
+		
+		
+		$this->runRoute($host,$path);
 		
 		$this->hook ( IApplicationHook::class, 'applicationEnd', InstanceSet::CALL_VOID, $this );
 		
@@ -267,6 +355,11 @@ class Application extends Base implements IFactoryEnable {
 		$this->response->flush ();
 	}
 	
+	final public function runRoute( $host ,$path ){
+		
+		$this->route->route( $host, $path );
+		
+	}
 	
 	
 	/**
@@ -274,7 +367,7 @@ class Application extends Base implements IFactoryEnable {
 	 * 
 	 * @return \Sepbin\Http\Request
 	 */
-	public function getRequest(): Request {
+	final public function getRequest(): Request {
 		return $this->request;
 	}
 	
@@ -285,10 +378,17 @@ class Application extends Base implements IFactoryEnable {
 	 * 
 	 * @return \Sepbin\Http\Response
 	 */
-	public function getResponse(): Response {
+	final public function getResponse(): Response {
 		return $this->response;
 	}
-	public function isDebug(): bool {
+	
+	
+	
+	/**
+	 * 是否处于调试模式
+	 * @return bool
+	 */
+	final public function isDebug(): bool {
 		return $this->debug;
 	}
 	
@@ -299,7 +399,7 @@ class Application extends Base implements IFactoryEnable {
 	/**
 	 * 脚本错误
 	 */
-	public function error($errno, $errstr, $errfile, $errline) {
+	final public function error($errno, $errstr, $errfile, $errline) {
 		
 		switch ($errno) {
 			
@@ -330,6 +430,7 @@ class Application extends Base implements IFactoryEnable {
 		}
 		
 		$this->hook ( IApplicationHook::class, 'applicationWarning', InstanceSet::CALL_VOID, $errno, $errstr, $errfile, $errline );
+	
 	}
 	
 	
@@ -344,15 +445,32 @@ class Application extends Base implements IFactoryEnable {
 			$endtime = explode ( ' ', microtime () );
 			$runtime = $endtime [0] + $endtime [1] - ($this->starttime [0] + $this->starttime [1]);
 			$runtime = round ( $runtime, 5 );
+			
+			
 			AppInfoView::$app = $this;
 			AppInfoView::$runtime = $runtime;
 			AppInfoView::$runmemory = round ( (memory_get_usage () - $this->startmemory) / 1024 / 1024, 3 );
 			
+			
 			if ($this->request->getRequestType () == Request::REQUEST_TYPE_CONSOLE) {
-				AppInfoView::string ();
-			} else {
-				AppInfoView::html ();
+				
+				AppInfoView::string();
+				
 			}
+			
+			if ($this->request->getRequestType () == Request::REQUEST_TYPE_BROSWER) {
+				
+				AppInfoView::html ();
+				
+			}
+			
+			if ($this->request->getRequestType () == Request::REQUEST_TYPE_POST) {
+				
+				AppInfoView::data ();
+				
+			}
+			
+			
 			
 		} );
 			
@@ -361,26 +479,36 @@ class Application extends Base implements IFactoryEnable {
 	/**
 	 * 应用异常
 	 */
-	public function exception($e) {
+	final public function exception($e) {
 		
 		ob_end_clean();
 		ob_clean();
 		
 		if (isset ( $this->errHandler [$e->getCode ()] )) {
+			
 			$this->errHandler[$e->getCode()]( $e->getCode (), $e->getMessage (), $e->getFile (), $e->getLine () );
+			
 		}else{
 		    
-		    $this->response->bufferOut ( function () use ($e) {
-		        AppExceptionView::$app = $this;
-		        AppExceptionView::$err = $e;
-		        if ($this->request->getRequestType () == Request::REQUEST_TYPE_CONSOLE) {
-		            AppExceptionView::string ();
-		        } elseif ($this->request->getRequestType () == Request::REQUEST_TYPE_POST) {
-		            AppExceptionView::json ();
-		        } else {
-		            AppExceptionView::html ();
-		        }
-		    } );
+			AppExceptionView::$app = $this;
+			AppExceptionView::$err = $e;
+			
+			if ($this->request->getRequestType () == Request::REQUEST_TYPE_CONSOLE) {
+				AppExceptionView::string ();
+			}
+			
+			if ($this->request->getRequestType () == Request::REQUEST_TYPE_BROSWER) {
+				
+				AppExceptionView::html ();
+				
+			}
+			
+			if ($this->request->getRequestType () == Request::REQUEST_TYPE_POST) {
+				
+				AppExceptionView::data ();
+				
+			}
+			
 		    
 		}
 		

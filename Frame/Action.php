@@ -13,8 +13,7 @@ use Sepbin\System\Frame\Mvc\ViewRender;
 use Sepbin\System\Frame\Hook\IMvcModelHook;
 
 class Action extends Base
-{
-	
+{	
 	
 	private $moduleName;
 	
@@ -130,6 +129,9 @@ class Action extends Base
 			throw (new ActionResultErrorException())->appendMsg( $this->moduleName .' : '.$this->controllerName.' -> '. $action );
 		}
 		
+		if( $this->requestType == null ) return $result;
+		
+		
 		if( isset(FrameManager::$render[ get_class($result) ]) ){
 		    $this->render = new FrameManager::$render[ get_class($result) ];
 			if( !$this->render instanceof AbsRender ){
@@ -153,7 +155,9 @@ class Action extends Base
 	}
 	
 	public function getLastRender(){
+		
 		return $this->render;
+		
 	}
 	
 	private function getActionMethod( $name ){
