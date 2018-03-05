@@ -1,6 +1,11 @@
 <?php
 namespace Sepbin\System\Util\Data;
 
+/**
+ * 类名称规则的相互转换
+ * @author joson
+ *
+ */
 class ClassName
 {
 	

@@ -9,7 +9,6 @@ use Sepbin\System\Util\Factory;
 class HttpResponse extends Base implements IFactoryEnable
 {
 	
-	
 	const DATA_TYPE_HTML = 'html';
 	
 	const DATA_TYPE_XML = 'xml';
@@ -127,115 +126,6 @@ class HttpResponse extends Base implements IFactoryEnable
 		}
 		
 	}
-	
-	
-// 	/**
-// 	 * 压入内容到输出缓冲
-// 	 * @param mixed $buffer
-// 	 */
-// 	public function put( $buffer ){
-		
-// 		if( !is_string($buffer) && !is_array($buffer) ){
-		    
-// 			$buffer = var_export($buffer,true);
-			
-// 		}
-		
-// 		$this->buffer[] = $buffer;
-		
-// 	}
-	
-// 	/**
-// 	 * 把回调过程的输出存进输出缓冲，暂不输出
-// 	 * @param \Closure $fun
-// 	 * @return string
-// 	 */
-// 	public function bufferOut(\Closure $func){
-		
-// 		$this->put( $this->getOut($func) );
-		
-// 	}
-	
-	
-// 	/**
-// 	 * 获取回调过程的输出
-// 	 * @param \Closure $func
-// 	 * @return string
-// 	 */
-// 	public function getOut(\Closure $func):string{
-// 		ob_start();
-// 		$func();
-// 		$out = ob_get_contents();
-// 		ob_clean();
-// 		return $out;
-// 	}
-	
-	/**
-	 * 输出缓冲
-	 */
-// 	public function flush(){
-		
-// // 		var_dump($this->contentType);
-		
-// 		$this->sendHeader();
-// 		if( $this->contentType == 'text/xml' || $this->contentType == 'application/json' ){
-			
-// 			$otherStr = null;
-// 			$data = array();
-			
-// 			foreach ($this->buffer as $item){
-// 				if(empty($item)) continue;
-// 				if( is_array($item) ){
-// 					$data = array_merge( $data, $item );
-// 				}else{
-// 					$item = str_replace(array("\n","\t",'&nbsp;'), '', strip_tags( $item )) ;
-// 					$item = preg_replace('/\s+/', ' ', $item);
-// 					$otherStr .= trim($item).' ';
-// 				}
-// 			}
-			
-// 			if( $otherStr !== null ){
-// 				$data['__other_text'] = $otherStr ;
-// 			}
-			
-// 			if($this->contentType == 'text/xml'){
-// 				echo ArrayXML::arrayToXmlString($data);
-// 			}else{
-// 				echo json_encode($data,JSON_UNESCAPED_UNICODE);
-// 			}
-			
-// 		}elseif ( $this->contentType == 'text/plain' ){
-			
-// 			foreach ($this->buffer as $item){
-// 				if(is_string($item)){
-// 					echo strip_tags( $item )." \n";
-// 				}else{
-// 					var_export( $item );
-// 				}
-// 			}
-			
-// 		}else if ($this->contentType == 'text/html'){
-			
-// 			foreach ($this->buffer as $item){
-// 				if(is_string($item)){
-// 					echo $item." \n";
-// 				}else{
-// 					echo '<pre>';
-// 					var_export($item);
-// 					echo '</pre>';
-// 				}
-// 			}
-			
-// 		}
-		
-// 		$this->buffer = array();
-// 		ob_flush();
-// 		flush();
-		
-// 	}
-	
-
-	
 	
 	
 }

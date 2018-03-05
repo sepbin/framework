@@ -241,4 +241,15 @@ class Request extends Base
 		
 	}
 	
+	
+	/**
+	 * 获取参数类
+	 * @return RequestParam
+	 */
+	public function getParams() : RequestParam{
+		
+		return $this->param;
+		
+	}
+	
 }

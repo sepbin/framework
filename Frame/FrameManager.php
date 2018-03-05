@@ -148,8 +148,6 @@ class FrameManager extends Base implements IFactoryEnable, IRouteEnable
 		
 		$result = $action->$actionName(...$requestParams);
 		
-// 		getApp()->getResponse()->setContentType( $action->getLastRender()->responseFormat );
-		
 		return $result;
 	}
 	

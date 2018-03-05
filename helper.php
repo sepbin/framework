@@ -3,6 +3,8 @@ use Sepbin\System\Util\ConfigUtil;
 use Sepbin\System\Core\Application;
 use Sepbin\System\Core\RequestParam;
 use Sepbin\System\Http\HttpResponse;
+use Sepbin\System\Http\Cookie;
+use Sepbin\System\Http\Session;
 
 
 /**
@@ -51,6 +53,24 @@ function getHttp() : HttpResponse{
 	
 	return HttpResponse::getInstance('http');
 	
+}
+
+
+/**
+ * 获取Cookie单例
+ * @return \Sepbin\System\Http\Cookie
+ */
+function getCookie(){
+	return Cookie::getInstance('cookie');
+}
+
+
+/**
+ * 获取Session单例
+ * @return \Sepbin\System\Http\Session
+ */
+function getSession(){
+	return Session::getInstance('session');
 }
 
 

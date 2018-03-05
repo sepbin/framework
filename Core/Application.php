@@ -42,12 +42,6 @@ class Application extends Base implements IFactoryEnable {
 	 */
 	public $defaultLang;
 	
-	/**
-	 * 当前语言
-	 * 
-	 * @var string
-	 */
-	public $language;
 	
 	/**
 	 * 字符编码
@@ -143,13 +137,11 @@ class Application extends Base implements IFactoryEnable {
 		
 		if ($config->check ( 'language' )) {
 			$this->defaultLang = $config->getStr ( 'language', 'zh-CN' );
-			$this->language = $this->defaultLang;
 		}
 		
 		if( $config->check('default_data_format') ){
 			$this->defaultDataFormat = $config->getStr('default_data_format');
 		}
-		
 		
 		
 		$this->httpRewrite = $config->getBool ( 'rewrite', false );
@@ -276,15 +268,17 @@ class Application extends Base implements IFactoryEnable {
 	
 	
 	private function setLang() {
+		
 		date_default_timezone_set ( $this->dateTimezone );
-		setlocale ( LC_ALL, $this->language . '.' . $this->charset );
-		putenv ( "LANGUAGE=" . $this->language . '.' . $this->charset );
+		setlocale ( LC_ALL, $this->request->requestLang . '.' . $this->charset );
+		putenv ( "LANGUAGE=" . $this->request->requestLang . '.' . $this->charset );
 		
 		/**
 		 * 绑定公共语言库
 		 */
 		bindtextdomain ( 'Application', APP_DIR . '/Locale' );
 		bind_textdomain_codeset ( 'Application', getApp ()->charset );
+		
 	}
 	
 	

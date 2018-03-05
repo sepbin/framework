@@ -6,8 +6,8 @@ use Sepbin\System\Core\Base;
 use Sepbin\System\Util\Traits\TGetType;
 use Sepbin\System\Util\IFactoryEnable;
 use Sepbin\System\Util\Factory;
-use Sepbin\System\Util\Encrypt\AES256;
 use Sepbin\System\Util\Encrypt\IEncrypt;
+use Sepbin\System\Util\Encrypt\Aes128Cbc;
 
 class Cookie extends Base implements IFactoryEnable
 {
@@ -44,10 +44,10 @@ class Cookie extends Base implements IFactoryEnable
 		$this->prefix = $config->getStr('prefix');
 		$this->expire = $config->getInt('expire',1800);
 		$this->isEncrypt = $config->getBool('is_encrypt',true);
-		$this->encryptMethod = $config->getStr('encrypt', AES256::class);
+		$this->encryptMethod = $config->getStr('encrypt', Aes128Cbc::class);
 		
 		if( $this->isEncrypt ){
-			$this->encrypt = $config->getInstance('encrypt', $this->encryptMethod);
+			$this->encrypt = $config->getInstance('encrypt', $this->encryptMethod, IEncrypt::class);
 		}
 		
 	}
@@ -62,7 +62,7 @@ class Cookie extends Base implements IFactoryEnable
 		}
 		
 		if( is_object($value) || is_array($value) ){
-			$value = '[@'. base64_encode( json_encode( $value ) ).']';
+			$value = '[$'. base64_encode( json_encode( $value ) ).']';
 		}
 		
 		if( $this->isEncrypt ){
@@ -72,6 +72,7 @@ class Cookie extends Base implements IFactoryEnable
 		setcookie($name,$value,$expire,$path,$domain,$secure);
 		
 	}
+	
 	
 	public function del( $name, $path='/', $domain=null, $secure=false ){
 		
@@ -89,8 +90,7 @@ class Cookie extends Base implements IFactoryEnable
 		
 		if($this->isEncrypt) $value = $this->encrypt->decrypt($value);
 		
-		
-		if( substr($value, 0, 2) == '[@' && substr($value, strlen($value)-1) == ']' ){
+		if( substr($value, 0, 2) == '[$' && substr($value, strlen($value)-1) == ']' ){
 			$value = substr($value, 2, strlen($value) -3 );
 			$value = json_decode( base64_decode($value) );
 		}
@@ -98,8 +98,6 @@ class Cookie extends Base implements IFactoryEnable
 		return $value;
 		
 	}
-	
-	
 	
 	
 }

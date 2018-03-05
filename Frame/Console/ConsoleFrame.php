@@ -36,7 +36,7 @@ class ConsoleFrame extends Base implements IFactoryEnable, IRouteEnable
 	 */
 	public function _init( \Sepbin\System\Util\FactoryConfig $config ){
 		
-		getApp()->response->setContentType('txt');
+		
 		
 	}
 	
@@ -48,7 +48,7 @@ class ConsoleFrame extends Base implements IFactoryEnable, IRouteEnable
 		$serviceName = ClassName::underlineToCamel($serviceName,true);
 		
 		if( in_array($serviceName, $this->sepService) ){
-			$className = 'Sepbin\System\Service\\'.$serviceName;
+			$className = 'Sepbin\System\Service\Preset\\'.$serviceName;
 		}else{
 			$className = 'SepApp\Service\\'.$serviceName;
 		}
@@ -77,13 +77,11 @@ class ConsoleFrame extends Base implements IFactoryEnable, IRouteEnable
 			foreach ($methods as $item){
 				if( substr($item->name, strlen($item->name)-6 ) == 'Action' ){
 					$name = substr($item->name, 0, strlen($item->name)-6);
-					
 					if( $name == 'do' ){
 						$names[] = ConsoleUtil::text('no command',-1,ConsoleUtil::COLOR_GREEN);
 					}else{
 						$names[] = $name;
 					}
-					
 				}
 			}
 			

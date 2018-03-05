@@ -89,10 +89,17 @@ class Session extends Base implements IFactoryEnable
         
     }
     
+    
     public function set( string $name, $value ){
         
         $_SESSION[$name] = $value;
         
+    }
+    
+    public function del( string $name ){
+    	
+    	if( isset($_SESSION[$name]) ) unset($_SESSION[$name]);
+    	
     }
     
 }

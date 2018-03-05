@@ -1,12 +1,31 @@
 <?php
-namespace Sepbin\System\Util\Data;
+namespace Sepbin\System\Util\Encrypt;
+
+use Sepbin\System\Util\Factory;
+
 /**
  * 
  * AuthCode对称加密
  *
  */
-class AuthCode
+class Authcode implements IEncrypt
 {
+	
+	private $key;
+	
+	
+	static public function getInstance( string $config_namespace=null, string $config_file=null, string $config_path=CONFIG_DIR ):AuthCode{
+		
+		return Factory::get(AuthCode::class, $config_namespace, $config_file, $config_path);
+		
+	}
+	
+	
+	public function _init( \Sepbin\System\Util\FactoryConfig $config ){
+		
+		$this->key = $config->get('key','qtjrljsdwerrwrwerwexcvhasd342sd2');
+		
+	}
 	
 	/**
 	 * 加密一段字符串
@@ -14,9 +33,9 @@ class AuthCode
 	 * @param string $key
 	 * @return string
 	 */
-	static public function encode( string $string, string $key) : string{
+	public function encrypt( string $data ):string{
 		
-		return self::sub($string,'ENCODE',$key);
+		return $this->sub($data,'ENCODE',$this->key);
 		
 	}
 	
@@ -28,17 +47,15 @@ class AuthCode
 	 * @param string $key
 	 * @return string
 	 */
-	static public function decode( string $string, string $key) : string{
+	public function decrypt( string $data ):string{
 		
-		return self::sub($string,'DECODE',$key);
+		return $this->sub($data,'DECODE',$this->key);
 		
 	}
 	
 	
 	
-	
-	
-	static private function sub($string, $operation = 'DECODE', $key = '', $expiry = 0) {
+	private function sub($string, $operation = 'DECODE', $key = '', $expiry = 0) {
 		
 		$ckey_length = 4;
 		$key = md5($key ? $key : md5(MOOPHP_AUTHKEY.$_SERVER['HTTP_USER_AGENT']));

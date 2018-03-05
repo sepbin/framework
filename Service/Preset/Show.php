@@ -1,9 +1,10 @@
 <?php
-namespace Sepbin\System\Service;
+namespace Sepbin\System\Service\Preset;
 
 use Sepbin\System\Util\FileUtil;
 use Sepbin\System\Util\Data\ClassName;
 use Sepbin\System\Util\ConsoleUtil;
+use Sepbin\System\Service\AbsService;
 
 /**
  * 
@@ -11,7 +12,7 @@ use Sepbin\System\Util\ConsoleUtil;
  * @author joson
  *
  */
-class Show
+class Show extends AbsService
 {
 	
 	public function doAction(){

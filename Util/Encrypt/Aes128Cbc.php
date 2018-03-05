@@ -3,7 +3,7 @@ namespace Sepbin\System\Util\Encrypt;
 
 use Sepbin\System\Util\Factory;
 
-class AES128 implements IEncrypt
+class Aes128Cbc implements IEncrypt
 {
     
     
@@ -12,9 +12,9 @@ class AES128 implements IEncrypt
     private $iv;
     
     
-    static public function getInstance( string $config_namespace=null, string $config_file=null, string $config_path=CONFIG_DIR ):AES128{
+    static public function getInstance( string $config_namespace=null, string $config_file=null, string $config_path=CONFIG_DIR ):Aes128Cbc{
         
-        return Factory::get(AES128::class, $config_namespace, $config_file, $config_path);
+    	return Factory::get(Aes128Cbc::class, $config_namespace, $config_file, $config_path);
         
     }
     

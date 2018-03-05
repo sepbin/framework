@@ -5,14 +5,16 @@ namespace Sepbin\System\Service\Preset;
 
 use Sepbin\System\Util\ConsoleUtil;
 use Sepbin\System\Util\Data\ClassName;
+use Sepbin\System\Service\AbsService;
 
 /**
- * @desc clean project
+ * @desc add project parts
  * @author joson
  *
  */
-class Add
+class Add extends AbsService
 {
+	
 	
 	public function controllerAction(){
 		
@@ -21,9 +23,21 @@ class Add
 		
 		
 		ConsoleUtil::writeLine('input your controller name, such as "my_controller"');
-		$controller = ConsoleUtil::getRequireInput('controller name?');
 		
 		$root = DOCUMENT_ROOT.'/application/Application';
+		$filename = '';
+		$className = '';
+		
+		$controller = ConsoleUtil::getRequireInput('controller name?',[], function($answer) use (&$filename,&$className,$root){
+			
+			$className = ClassName::underlineToCamel($answer,true).'Controller';
+			$filename = $root.'/'.ClassName::underlineToCamel($module,true).'/'.$className.'.php';
+			
+		});
+		
+		
+		
+		
 		
 	}
 	
@@ -50,7 +64,8 @@ class Add
 			
 		});
 		
-		
+		ConsoleUtil::writeLine('input '.$name.' description.');
+		$description = ConsoleUtil::getInput('description?');
 		
 		
 		$actions = [];
@@ -68,7 +83,11 @@ class Add
 		
 		$content ='<?php
 namespace SepApp\Service;
-				
+/**
+*
+*@desc '.$description.'
+*
+*/
 class '.$className.'
 {
 		
@@ -86,9 +105,11 @@ class '.$className.'
 		}
 		
 		
-		$content.= '}';
+		$content.= '
+
+}';
 		
-		ConsoleUtil::writeLine('write '.$filename);
+		ConsoleUtil::writeSuccess('write '.$filename);
 		file_put_contents($filename, $content);
 		ConsoleUtil::writeSuccess('done!');
 		
