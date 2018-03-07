@@ -64,6 +64,14 @@ class Application extends Base implements IFactoryEnable {
 	
 	
 	/**
+	 * 服务器是否开启x-sendfile
+	 * 此服务用于发送文件，请参考手册`文件上传/下载`一节
+	 * @var string
+	 */
+	public $xSendfile = false;
+	
+	
+	/**
 	 * 默认使用的协议
 	 * @var string
 	 */
@@ -143,6 +151,8 @@ class Application extends Base implements IFactoryEnable {
 			$this->defaultDataFormat = $config->getStr('default_data_format');
 		}
 		
+		$this->xSendfile = $config->getBool('x_sendfile',false);
+		
 		
 		$this->httpRewrite = $config->getBool ( 'rewrite', false );
 		$this->defaultPath = $config->getStr('default_path','');
@@ -167,7 +177,11 @@ class Application extends Base implements IFactoryEnable {
 		    $this->registerHook($interface_name, $instance);
 		}
 		
-		
+		$configs = $config->getArrStr('load_conf');
+		foreach ($configs as $item){
+		    config()->addFile($item);
+		}
+	    
 		if ($this->debug) {
 			$this->starttime = explode ( ' ', microtime () );
 			$this->startmemory = memory_get_usage ();
@@ -436,15 +450,14 @@ class Application extends Base implements IFactoryEnable {
 		if( !$this->debugInfo ) return ;
 		
 		$this->response->bufferOut ( function () {
+		    
 			$endtime = explode ( ' ', microtime () );
 			$runtime = $endtime [0] + $endtime [1] - ($this->starttime [0] + $this->starttime [1]);
 			$runtime = round ( $runtime, 5 );
 			
-			
 			AppInfoView::$app = $this;
 			AppInfoView::$runtime = $runtime;
 			AppInfoView::$runmemory = round ( (memory_get_usage () - $this->startmemory) / 1024 / 1024, 3 );
-			
 			
 			if ($this->request->getRequestType () == Request::REQUEST_TYPE_CONSOLE) {
 				
@@ -463,7 +476,6 @@ class Application extends Base implements IFactoryEnable {
 				AppInfoView::data ();
 				
 			}
-			
 			
 			
 		} );

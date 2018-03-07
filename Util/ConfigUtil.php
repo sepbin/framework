@@ -77,9 +77,10 @@ class ConfigUtil
 		if( $this->checkLoadedFile($fullname) ) return ;
 		
 		$content = $this->loadFile( $fullname );
-		if(empty($config)) return ;
 		
-		$content = simplexml_load_string($content);
+		if(empty($content)) return ;
+		
+		$content = \simplexml_load_string($content);
 		
 		$config = json_decode( json_encode( $content ), true );
 		
@@ -173,6 +174,12 @@ class ConfigUtil
 		
 	}
 	
+	
+	/**
+	 * 设置一项配置
+	 * @param string $name 用点语法表示
+	 * @param mixed $value
+	 */
 	public function set( string $name, $value ){
 		
 		DotName::set($this->config,$name, $value);
@@ -180,14 +187,36 @@ class ConfigUtil
 	}
 	
 	
-	
-	public function check( string $name ){
+	/**
+	 * 检查配置名是否存在
+	 * @param string $name 用点语法表示 如配置为 'a' => ['b'=>[]]，则用 a.b表示
+	 * @return boolean  返回true为存在，返回false为不存在
+	 */
+	public function check( string $name ) : bool{
 		
 		$d = DotName::get($this->config,$name,null);
 		
 		if($d != null) return true;
+		
 		return false;
 		
+	}
+	
+	/**
+	 * 检查配置名是否是另一个配置的指针
+	 * 有些子类可以允许单例，在配置中可以指向一个公共的配置
+	 * 但如果希望每个子类都是单独的实例，则可用此方法判断
+	 * @param string $name
+	 * @return bool 返回false为配置不存在或不是一个指针，返回true为配置是一个指针
+	 */
+	public function checkPointer( string $name ) : bool{
+	    
+	    $d = DotName::get($this->config,$name,null);
+	    if($d == null) return false;
+	    
+	    if( !is_string($d) ) return false;
+	    return true;
+	    
 	}
 	
 	

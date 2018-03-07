@@ -1,14 +1,18 @@
 <?php
 namespace Sepbin\System\Core;
 
-use Sepbin\System\Http\HttpResponse;
-use Sepbin\System\Util\Data\ArrayXML;
+use Sepbin\System\Core\Exception\NotTypeException;
 
 class Response extends Base
 {
-	
+    
+    /**
+     * 
+     * @var string
+     */
+    public $out = ResponseOutDefault::class;
+    
 	private $buffer = [];
-	
 	
 	/**
 	 * 压入内容到输出缓冲
@@ -56,62 +60,31 @@ class Response extends Base
 	 * 输出缓冲
 	 */
 	public function flush(){
-		
+	    
+	    /**
+	     * 
+	     * @var IResponseHijack $out
+	     */
+	    if( is_string($this->out) ){
+	        $out = new $this->out;
+	    }else{
+	        $out = $this->out;
+	    }
+	    
+	    if( !$out instanceof IResponseHijack ){
+	        throw (new NotTypeException())->appendMsg( get_class($out).' need IResponseHijack' );
+	    }
+	    
 		if( getApp()->request->getRequestType() == Request::REQUEST_TYPE_CONSOLE ){
-			
-			foreach ($this->buffer as $item){
-				if( is_string($item) ){
-					echo strip_tags( $item )." \n";
-				}else{
-					var_export( $item );
-				}
-			}
-			
-			return ;
-			
+		    $out->console($this->buffer);
 		}
 		
-		$http = HttpResponse::getInstance('http');
-		
 		if( getApp()->request->getRequestType() == Request::REQUEST_TYPE_POST ){
-			
-			$http->setContentType( getApp()->defaultDataFormat );
-			
-			$otherStr = null;
-			$data = array();
-			
-			foreach ($this->buffer as $item){
-				if(empty($item)) continue;
-				if( is_array($item) ){
-					$data = array_merge( $data, $item );
-				}else{
-					$otherStr .= trim($item).' ';
-				}
-			}
-			
-			if( $otherStr !== null ){
-				$data['__other_text'] = $otherStr ;
-			}
-			
-			if($this->contentType == 'text/xml'){
-				echo ArrayXML::arrayToXmlString($data);
-			}else{
-				echo json_encode($data,JSON_UNESCAPED_UNICODE);
-			}
-			
+			$out->post($this->buffer);
 		}
 		
 		if( getApp()->request->getRequestType() == Request::REQUEST_TYPE_BROSWER ){
-			$http->setContentType('html');
-			foreach ($this->buffer as $item){
-				if(is_string($item)){
-					echo $item." \n";
-				}else{
-					echo '<pre>';
-					var_export($item);
-					echo '</pre>';
-				}
-			}
+		    $out->browser($this->buffer);		    
 		}
 		
 		

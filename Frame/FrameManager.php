@@ -60,7 +60,11 @@ class FrameManager extends Base implements IFactoryEnable, IRouteEnable
 			
 		}
 		
-		FrameManager::addRender(RedirectModel::class, RedirectRender::class);
+		FrameManager::addRender(\Sepbin\System\Frame\Redirect\RedirectModel::class, 
+		    \Sepbin\System\Frame\Redirect\RedirectRender::class);
+		
+		FrameManager::addRender(\Sepbin\System\Frame\File\FileModel::class, 
+		    \Sepbin\System\Frame\File\FileRender::class);
 		
 	}
 	
@@ -94,7 +98,7 @@ class FrameManager extends Base implements IFactoryEnable, IRouteEnable
 	 * @param string $class_type 指定的渲染模型类型
 	 * @param string $render	渲染器的类名称，必须继承至 Sepbin\System\Mvc\Render，否则在渲染时会抛出异常
 	 */
-	static public function addRender( string $class_type, string $render ) : void{
+	static public function addRender( string $class_type, string $render ) {
 		
 		self::$render[ $class_type ] = $render;
 		

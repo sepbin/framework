@@ -4,6 +4,7 @@ namespace Sepbin\System\Util;
 use Sepbin\System\Util\Traits\TGetType;
 use Sepbin\System\Util\Exception\FactoryTypeException;
 use Sepbin\System\Util\Data\ClassName;
+use Sepbin\System\Util\Exception\DenySingletonException;
 
 class FactoryConfig
 {
@@ -59,12 +60,17 @@ class FactoryConfig
 	}
 	
 	
-	public function getInstance( string $name_pre , string $name, $check_type='' ){
+	public function getInstance( string $name_pre , string $name, $check_type='', bool $allow_pointer = true ){
 		
 	    $config_name = substr($name, strrpos($name, '\\')+1);
 	    $config_name = ClassName::camelToUnderline($config_name);
+	    $config_name = $this->namespace.'.'.$name_pre.'_'.$config_name;
 	    
-	    $instance = $name::getInstance( $this->namespace.'.'.$name_pre.'_'.$config_name, $this->file, $this->filePath );
+	    if( !$allow_pointer && config()->checkPointer( $config_name ) ){
+	        throw ( new DenySingletonException() )->appendMsg( $config_name );
+	    }
+	    
+	    $instance = $name::getInstance( $config_name , $this->file, $this->filePath );
 		
 		if( $check_type != '' && !$instance instanceof $check_type ){
 		    throw ( new FactoryTypeException() )->appendMsg( $name.' 必须继承或实现 '. $check_type );
@@ -82,11 +88,11 @@ class FactoryConfig
 	 * @param string $check_type
 	 * @return string
 	 */
-	public function getClass( string $name, $default='', $check_type='' ){
+	public function getClass( string $name, $default='', $check_type='', bool $allow_pointer = true ){
 	    
 	    $conf = $this->get($name,$default);
 	    
-	    return $this->getInstance($name, $conf, $check_type);
+	    return $this->getInstance($name, $conf, $check_type, $allow_pointer);
 	    
 	}
 	

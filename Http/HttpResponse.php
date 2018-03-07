@@ -60,6 +60,12 @@ class HttpResponse extends Base implements IFactoryEnable
 	public $status = 200;
 	
 	
+	/**
+	 * HTTP协议版本
+	 * @var string
+	 */
+	public $httpVersion = '1.1';
+	
 	
 	static public function getInstance( string $config_namespace=null, string $config_file=null, string $config_path=CONFIG_DIR ):HttpResponse{
 		
@@ -73,8 +79,7 @@ class HttpResponse extends Base implements IFactoryEnable
 		
 		$this->cacheControl = $config->getStr('cache_control','no-cache');
 		
-		$ext = $config->getStr('content_type','html');
-		$this->setContentType( $ext );
+		$this->httpVersion = $config->getStr('http_version','1.1');
 		
 		if($config->check('expire')){
 			$this->expire = $config->getInt('expire');
@@ -107,7 +112,7 @@ class HttpResponse extends Base implements IFactoryEnable
 	/**
 	 * 发送HTTP头
 	 */
-	private function sendHeader(){
+	public function sendHeader(){
 		if (isset($this->charset)){
 			header("Content-Type:{$this->contentType}; charset={$this->charset}");
 		}
@@ -122,7 +127,7 @@ class HttpResponse extends Base implements IFactoryEnable
 		}
 		
 		if ( isset($this->status) ){
-			header('HTTP/1.1 '.$this->status);
+			header('HTTP/'.$this->httpVersion.' '.$this->status);
 		}
 		
 	}

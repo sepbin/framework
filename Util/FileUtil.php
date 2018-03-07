@@ -52,24 +52,39 @@ class FileUtil
 	 * 递归删除整个目录
 	 * @param string $directory
 	 */
-	static public function rmdir(string $directory){
-		if(file_exists($directory)){//判断目录是否存在，如果不存在rmdir()函数会出错
-			if( false != ($dir_handle=@opendir($directory)) ){//打开目录返回目录资源，并判断是否成功
-				while( false != ($filename=readdir($dir_handle)) ){//遍历目录，读出目录中的文件或文件夹
-					if($filename!='.' && $filename!='..'){//一定要排除两个特殊的目录
-						$subFile=$directory."/".$filename;//将目录下的文件与当前目录相连
-						if(is_dir($subFile)){//如果是目录条件则成了
-							self::rmdir($subFile);//递归调用自己删除子目录
+	static public function rmdir(string $directory, $callback=null){
+	    
+		if(file_exists($directory)){
+			if( false != ($dir_handle=@opendir($directory)) ){
+				while( false != ($filename=readdir($dir_handle)) ){
+				    
+					if($filename!='.' && $filename!='..'){
+						$subFile=$directory."/".$filename;
+						if(is_dir($subFile)){
+							self::rmdir($subFile, $callback);
 						}
-						if(is_file($subFile)){//如果是文件条件则成立
-							unlink($subFile);//直接删除这个文件
+						if(is_file($subFile)){
+						    $result = false;
+						    if( is_writeable($subFile) ){
+							    $result = unlink($subFile);
+						    }
+                            if( $callback && is_callable($callback) ){
+                                $callback( $subFile, $result );
+                            }
 						}
 					}
 				}
 				closedir($dir_handle);//关闭目录资源
-				rmdir($directory);//删除空目录
+				$result = false;
+				if( is_writeable($directory) ){
+				    $result = @rmdir($directory);//删除空目录
+				}
+				if( $callback && is_callable($callback) ){
+				    $callback( $directory, $result );
+				}
 			}
 		}
+		
 	}
 	
 }

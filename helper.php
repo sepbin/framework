@@ -5,6 +5,7 @@ use Sepbin\System\Core\RequestParam;
 use Sepbin\System\Http\HttpResponse;
 use Sepbin\System\Http\Cookie;
 use Sepbin\System\Http\Session;
+use Sepbin\System\Cache\TempFile;
 
 
 /**
@@ -47,7 +48,7 @@ function request() : RequestParam{
 
 /**
  * 获取http响应单例
- * @return HttpResponse
+ * @return \Sepbin\System\Http\HttpResponse
  */
 function getHttp() : HttpResponse{
 	
@@ -70,7 +71,20 @@ function getCookie(){
  * @return \Sepbin\System\Http\Session
  */
 function getSession(){
+    
 	return Session::getInstance('session');
+	
+}
+
+
+/**
+ * 获取临时文件管理单例
+ * @return \Sepbin\System\Cache\TempFile
+ */
+function getTemp(){
+    
+    return TempFile::getInstance('temp');
+    
 }
 
 

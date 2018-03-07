@@ -4,7 +4,6 @@ namespace Sepbin\System\Frame\Mvc\View;
 use Sepbin\System\Core\Base;
 use Sepbin\System\Frame\Mvc\Exception\TemplateFileNoFoundException;
 use Sepbin\System\Frame\AbsController;
-use Sepbin\System\Frame\Mvc\Exception\CacheCantWriteException;
 use Sepbin\System\Util\HookRun;
 use Sepbin\System\Frame\Hook\IMvcTemplateHook;
 use Sepbin\System\Frame\Mvc\View\Syntax\ArtTemplate;

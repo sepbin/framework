@@ -33,6 +33,7 @@ if(!defined('LIB_PREFIX')) define('LIB_PREFIX', 'SepLib\\');
 //项目应用顶级命名
 if(!defined('APP_PREFIX')) define('APP_PREFIX', 'SepApp\\');
 
+if(!defined('APPLICATION_CONFIG')) define('APPLICATION_CONFIG', 'application.php');
 
 //获取http根路径
 $_findHttpRoot = function($path) use (&$_findHttpRoot){
@@ -71,7 +72,7 @@ if( !empty($_SERVER['REQUEST_URI']) ){
 include DOCUMENT_ROOT.'/vendor/autoload.php';
 
 $config = ConfigUtil::getInstance();
-$config->addPhpFile('application.php');
+$config->addPhpFile( APPLICATION_CONFIG );
 
 
 include __DIR__.'/helper.php';
