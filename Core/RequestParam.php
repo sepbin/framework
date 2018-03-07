@@ -3,6 +3,8 @@ namespace Sepbin\System\Core;
 
 
 use Sepbin\System\Util\Traits\TGetType;
+use Sepbin\System\Http\UpFile;
+use Sepbin\System\Http\UpBase64Image;
 
 class RequestParam
 {
@@ -43,5 +45,30 @@ class RequestParam
 		
 	}
 	
+	
+	
+	/**
+	 * 获取一个文件
+	 * @param string $name
+	 * @return NULL|\Sepbin\System\Http\UpFile
+	 */
+	public function getFile( string $name ){
+	    
+	    if( !isset($_FILES[$name]) ) return null;
+	    return new UpFile($_FILES[$name]);
+	    
+	}
+	
+	/**
+	 * 获取一个通过Base64上传的图片文件
+	 * @param string $name
+	 */
+	public function getBase64Image( string $name ){
+	   
+	    $content = $this->getStr($name);
+	    if( empty($content) ) return null;
+	    return new UpBase64Image($content);
+	    
+	}
 	
 }

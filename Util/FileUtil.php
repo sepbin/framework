@@ -11,7 +11,7 @@ class FileUtil
 	 */
 	static public function getName( string $filename ) : string{
 		
-		return StringUtil::substrFirstCharBefore( $filename , '.');
+	    return StringUtil::substrLastCharBefore( $filename , '.');
 		
 	}
 	

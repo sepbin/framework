@@ -9,6 +9,8 @@ use Sepbin\System\Util\Data\ClassName;
 use Sepbin\System\Frame\Action;
 use Sepbin\System\Util\HookRun;
 use Sepbin\System\Frame\Hook\IMvcRouteHook;
+use Sepbin\System\Http\UpFile;
+use Sepbin\System\Http\UpBase64Image;
 
 class FrameManager extends Base implements IFactoryEnable, IRouteEnable
 {
@@ -134,10 +136,18 @@ class FrameManager extends Base implements IFactoryEnable, IRouteEnable
     					$def = $item->getDefaultValue();
     				}
     				
+    				if( $type == UpFile::class ){
+    				    $requestParams[] = request()->getFile($name);
+    				    continue;
+    				}
+    				
+    				if( $type == UpBase64Image::class ){
+    				    $requestParams[] = request()->getBase64Image($name);
+    				    continue;
+    				}
+    				
     				$val = request()->get($name);
-    				
     				if( $def != null && empty($val) ) $val = $def;
-    				
     				if( $type == 'int' ) $val = intval($val);
     				if( $type == 'string' ) $val = $val.'';
     				if( $type == 'array' ){

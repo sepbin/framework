@@ -3,7 +3,7 @@ namespace Sepbin\System\Cache\Temp;
 
 use Sepbin\System\Util\IFactoryEnable;
 use Sepbin\System\Util\Factory;
-use Sepbin\System\Util\Data\Base62;
+use Sepbin\System\Util\Data\UniqueName;
 
 abstract class ATemp implements IFactoryEnable
 {
@@ -26,15 +26,7 @@ abstract class ATemp implements IFactoryEnable
     
     public function createName(){
         
-        $date = date('mdHis');
-        $date = Base62::encode($date);
-        
-        $mic = Base62::encode(  intval( floatval(microtime()) * 10000000 ) );
-        
-        
-        $rand = mt_rand(10000,99999);
-        $rand = Base62::encode($rand);
-        return $date.$mic.$rand;
+        return UniqueName::timeBased('mdHis');
         
     }
     

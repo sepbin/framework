@@ -63,6 +63,15 @@ class TempFile implements IFactoryEnable
      */
     public function write( string $data, $ext='', $key='' ) : string{
         
+        $key = $this->getKey($ext, $key);
+        
+        $this->driver->write($key, $data);
+        
+        return $key;
+        
+    }
+    
+    public function getKey( $ext='', $key='' ) : string{
         if( $key == '' ){
             $key = $this->driver->createName();
         }
@@ -72,10 +81,14 @@ class TempFile implements IFactoryEnable
         if( $ext != '' ){
             $key .= '.'.$ext;
         }
-        
-        $this->driver->write($key, $data);
-        
         return $key;
+    }
+    
+    public function copy( string $filename, $ext='', $key='' ){
+        
+        $key = $this->getKey($ext,$key);
+        
+        return copy($filename, $this->getFilename($key));
         
     }
     
