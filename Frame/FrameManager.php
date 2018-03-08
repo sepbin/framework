@@ -80,11 +80,12 @@ class FrameManager extends Base implements IFactoryEnable, IRouteEnable
 		
 	    
 		if( !empty($params['module']) ){
-			self::$module = ucfirst( ClassName::underlineToCamel( $params['module'] ) );
+			self::$module = ClassName::underlineToCamel( $params['module'], true );
+			
 		}
 		
 		if( !empty($params['controller']) ){
-			self::$controller = ucfirst( ClassName::underlineToCamel($params['controller']) );
+			self::$controller = ClassName::underlineToCamel($params['controller'], true);
 		}
 		
 		if( !empty($params['action']) ){

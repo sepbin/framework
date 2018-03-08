@@ -81,8 +81,8 @@ class BasicSyntax
 		//解析多语言标记
 		$this->content = preg_replace_callback('/<t>(.+?)<\/t>/', function($matches){
 			
-			return SyntaxUtil::phpTag( '$this->manage->controller->_t( \''. addslashes(trim( $matches[1] )).'\' )', true );
-			
+			return SyntaxUtil::phpTag( '$this->manage->_t( \''. addslashes(trim( $matches[1] )).'\' )', true );
+            
 		}, $this->content);
 		
 		$this->content = preg_replace_callback('/__(O|M|D)_([\w_]+)\((.*?)\)/', function($matches){

@@ -32,7 +32,7 @@ class ResponseOutDefault implements IResponseHijack
         $otherStr = null;
         $data = array();
         
-        foreach ($this->buffer as $item){
+        foreach ($buffer as $item){
             if(empty($item)) continue;
             if( is_array($item) ){
                 $data = array_merge( $data, $item );
@@ -60,7 +60,7 @@ class ResponseOutDefault implements IResponseHijack
     public function console( array $buffer ){
         
         
-        foreach ($this->buffer as $item){
+        foreach ($buffer as $item){
             if( is_string($item) ){
                 echo strip_tags( $item ) . PHP_EOL;
             }else{

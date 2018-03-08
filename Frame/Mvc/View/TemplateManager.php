@@ -99,6 +99,8 @@ class TemplateManager extends Base implements IFactoryEnable
 	public $parentParams = array();
 	public $extendContent = array();
 	
+	private $langDomain;
+	
 	
 	static public function getInstance( string $config_namespace=null, string $config_file=null, string $config_path=CONFIG_DIR ):TemplateManager{
 		
@@ -122,6 +124,8 @@ class TemplateManager extends Base implements IFactoryEnable
 		    mkdir( $this->cacheDirName, 0777, true );
 		}
 		
+		
+		
 	}
 	
 	public function setController( AbsController $controller, string $action ){
@@ -131,6 +135,10 @@ class TemplateManager extends Base implements IFactoryEnable
 		$this->filename = $this->getFilename( $this->controller->moduleName, $this->controller->controllerName, $this->action );
 		
 		HookRun::void(IMvcTemplateHook::class, 'tplManagerInit', $this);
+		
+		$this->langDomain = 'view_'. ClassName::camelToUnderline( $this->controller->moduleName );
+		bindtextdomain($this->langDomain , $this->stylePath.'/locale');
+		bind_textdomain_codeset( $this->langDomain, getApp()->charset);
 		
 	}
 	
@@ -272,7 +280,6 @@ class TemplateManager extends Base implements IFactoryEnable
 		
 		$content = HookRun::tunnel(IMvcTemplateHook::class, 'tplViewBefore', $content);
 		
-		
 		return $content;
 		
 	}
@@ -339,6 +346,7 @@ class TemplateManager extends Base implements IFactoryEnable
 		
 	}
 	
+	
 	public function putExtendContent( $name, $value, $append=true ){
 		
 		if(!$append || !isset($this->extendContent[ $name ])){
@@ -349,12 +357,19 @@ class TemplateManager extends Base implements IFactoryEnable
 		
 	}
 	
+	
 	public function getExtendContent( $name ){
 		
 		if(isset( $this->extendContent[ $name ] )) return $this->extendContent[$name];
 		
 		return '';
 		
+	}
+	
+	public function _t( string $message, array $data = [] ){
+	    
+	    return _lang($message, $this->langDomain, $data);
+	    
 	}
 	
 	

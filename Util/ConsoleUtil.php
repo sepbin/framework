@@ -113,6 +113,12 @@ class ConsoleUtil{
 		
 	}
 	
+	static public function writeHighlight( string $str ){
+	    
+	    self::writeLine( self::text($str,0, self::COLOR_BLUE) );
+	    
+	}
+	
 	
 	/**
 	 * 获取用户输入

@@ -14,8 +14,8 @@ class ConsoleFrame extends Base implements IFactoryEnable, IRouteEnable
 	
 	private $sepService = [
 		
-		'Show','Clean','Add'
-			
+		'Show','Clean','Add','Locale'
+	    
 	];
 	
 	

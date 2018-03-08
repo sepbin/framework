@@ -4,6 +4,7 @@ namespace Sepbin\System\Frame;
 use Sepbin\System\Core\Base;
 use Sepbin\System\Util\IFactoryEnable;
 use Sepbin\System\Util\Factory;
+use Sepbin\System\Util\Data\ClassName;
 
 abstract class AbsController extends Base implements IFactoryEnable
 {
@@ -17,6 +18,7 @@ abstract class AbsController extends Base implements IFactoryEnable
 	
 	public $_isStart = false;
 	
+	private $langModuleName;
 	
 	static public function getInstance( string $config_namespace=null, string $config_file=null, string $config_path=CONFIG_DIR ){
 		
@@ -47,8 +49,9 @@ abstract class AbsController extends Base implements IFactoryEnable
 	
 	private function setLang(){
 		
-		bindtextdomain($this->moduleName, APP_DIR.'/Locale');
-		bind_textdomain_codeset($this->moduleName, getApp()->charset);
+	    $this->langModuleName = ClassName::camelToUnderline($this->moduleName);
+		bindtextdomain($this->langModuleName, APP_DIR.'/Locale');
+		bind_textdomain_codeset($this->langModuleName, getApp()->charset);
 		
 	}
 	
@@ -68,8 +71,8 @@ abstract class AbsController extends Base implements IFactoryEnable
 	 * @param array $data
 	 * @return string
 	 */
-	public function _t( string $message, array $data = array() ):string{
-		return _lang($message, $this->moduleName, ...$data);
+	public function _t( string $message, array $data = [] ):string{
+	    return _lang($message, $this->langModuleName, ...$data);
 	}
 	
 }

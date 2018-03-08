@@ -115,8 +115,8 @@ class Request extends Base
 		
 		$isKey = function($arg){
 			if( substr($arg, 0, 1) == '-' || substr($arg, 0, 2) == '--' ){
-				
-				if( $arg == '-command' || $arg == '--command' ){
+			    
+				if( $arg == '--command' ){
 					return false;
 				}
 				
@@ -130,7 +130,13 @@ class Request extends Base
 		}
 		
 		for( $i=1; $i<count($args)+1; $i++ ){
-			if( $isKey( $args[$i] ) ){
+		    if( $isKey( $args[$i] ) ){
+		        
+		        if( substr($args[$i], 0, 1) == '-' && substr($args[$i], 0, 2) != '--' && strlen( trim($args[$i]) ) > 2 ){
+		            $params[ substr($args[$i], 1,1) ] = substr( $args[$i] , 2);
+		            continue;
+		        }
+		        
 				$result = preg_match('/-(\w+)=(.+)/', $args[$i],$matches);
 				if($result){
 					$params[ $matches[1] ] = $matches[2];

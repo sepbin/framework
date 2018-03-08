@@ -120,9 +120,9 @@ function _lang( $message, $domain, ...$params ){
  * @param array $data
  * @return string
  */
-function _t( string $message, array $data=array() ):string{
+function __t( string $message, array $data=array() ):string{
     
-    return _lang($message, 'Application', ...$data);
+    return _lang($message, 'application', ...$data);
     
 }
 

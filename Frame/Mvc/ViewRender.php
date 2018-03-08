@@ -24,6 +24,8 @@ class ViewRender extends AbsRender
 			return $data;
 		}
 		
+	    getApp()->request->setRequestType( Request::REQUEST_TYPE_POST );
+		
 		return $data;
 		
 	}
@@ -40,8 +42,9 @@ class ViewRender extends AbsRender
 		$template->setController($this->controller, $this->actionName);
 		
 		if( $template->checkTemplate() ){
-		    $this->responseFormat = 'html';
+		    
 			return $template->getContent( $data );
+			
 		}
 		
 		return $data;

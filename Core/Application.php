@@ -290,8 +290,8 @@ class Application extends Base implements IFactoryEnable {
 		/**
 		 * 绑定公共语言库
 		 */
-		bindtextdomain ( 'Application', APP_DIR . '/Locale' );
-		bind_textdomain_codeset ( 'Application', getApp ()->charset );
+		bindtextdomain ( 'application', APP_DIR . '/Locale' );
+		bind_textdomain_codeset ( 'application', getApp ()->charset );
 		
 	}
 	
