@@ -9,14 +9,6 @@ use Sepbin\System\Util\Factory;
 class HttpResponse extends Base implements IFactoryEnable
 {
 	
-	const DATA_TYPE_HTML = 'html';
-	
-	const DATA_TYPE_XML = 'xml';
-	
-	const DATA_TYPE_JSON = 'json';
-	
-	const DATA_TYPE_TEXT = 'txt';
-	
 	
 	/**
 	 * mime格式

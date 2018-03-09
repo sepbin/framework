@@ -137,7 +137,8 @@ class TemplateManager extends Base implements IFactoryEnable
 		HookRun::void(IMvcTemplateHook::class, 'tplManagerInit', $this);
 		
 		$this->langDomain = 'view_'. ClassName::camelToUnderline( $this->controller->moduleName );
-		bindtextdomain($this->langDomain , $this->stylePath.'/locale');
+		
+		bindtextdomain($this->langDomain , PUBLIC_DIR.'/'.$this->stylePath.'/locale');
 		bind_textdomain_codeset( $this->langDomain, getApp()->charset);
 		
 	}

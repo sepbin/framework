@@ -3,6 +3,7 @@ namespace Sepbin\System\Db\Driver;
 
 use Sepbin\System\Util\Factory;
 use Sepbin\System\Db\Exception\ConnectException;
+use Sepbin\System\Core\Exception\ExtensionException;
 
 class Sqlite3 implements IDriver
 {
@@ -16,6 +17,10 @@ class Sqlite3 implements IDriver
 	}
 	
 	public function _init(\Sepbin\System\Util\FactoryConfig $config){
+	    
+	    if( !class_exists('SQLite3') ){
+	        throw (new ExtensionException())->appendMsg('php-sqlite3');
+	    }
 	    
 	    try {
 	        $this->driver = new \SQLite3( DOCUMENT_ROOT.$config->getStr('database') );

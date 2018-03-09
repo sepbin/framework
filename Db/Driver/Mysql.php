@@ -21,7 +21,7 @@ class Mysql implements IDriver
 	
 	public function _init(\Sepbin\System\Util\FactoryConfig $config){
 		
-	    if( !class_exists('\PDO') ){
+	    if( !class_exists('PDO') ){
 	        throw (new ExtensionException())->appendMsg('php-pdo');
 	    }
 	    

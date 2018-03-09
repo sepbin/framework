@@ -6,6 +6,8 @@ use Sepbin\System\Core\IRouteEnable;
 use Sepbin\System\Core\Exception\RouteDelegateException;
 use Sepbin\System\Util\Factory;
 use Sepbin\System\Core\Request;
+use Sepbin\System\Util\HookRun;
+use Sepbin\System\Route\Hook\IRouteHook;
 
 class BasicRoute implements IRoute
 {
@@ -28,6 +30,9 @@ class BasicRoute implements IRoute
      */
     public function route( $host, $path ){
         
+        $host = HookRun::tunnel(IRouteHook::class, 'routeHost', $host);
+        $path = HookRun::tunnel(IRouteHook::class, 'routePath', $path);
+        
         $isFind = false;
         
         if(empty($this->rules)) return false;
@@ -36,27 +41,11 @@ class BasicRoute implements IRoute
         	
         	if (false !== ($result = $this->match ( $rule, $host, $path, $run['restrict'] ))) {
                 
-                if (is_callable ( $run ['delegate'] )) {
-                    
-                    $isFind = true;
-                    $run ['delegate'] ( $run['params'] );
-                    
-                } elseif (! empty ( $run ['delegate'] )) {
-                    
-                    $isFind = true;
-                    $delegate = Factory::getForString ( $run ['delegate'] );
-                    
-                    if (! $delegate instanceof IRouteEnable) {
-                        throw (new RouteDelegateException ())->appendMsg ( $run ['delegate'] );
-                    }
-                    
-                    if (! empty ( $run ['params'] )) {
-                        $result = array_merge ( $result, $run ['params'] );
-                    }
-                    
-                    $delegate->RouteMapper ( $result );
-                }
-                break;
+        	    return [
+        	        'delegate' => $run['delegate'],
+        	        'params' => array_merge( $result , $run['params'] )
+        	    ];
+        	    
             }
             
         }
@@ -112,6 +101,7 @@ class BasicRoute implements IRoute
                     
                     //检查限定规则
                     if( isset($restrict[$paramKey]) ){
+                        
                         $matches = [];
                         if( !preg_match('/^'.$restrict[$paramKey].'$/', $pathTmp[$i], $matches) ){
                             return false;

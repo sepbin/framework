@@ -12,6 +12,7 @@ use Sepbin\System\Core\Hook\IApplicationHook;
 use Sepbin\System\Route\BasicRoute;
 use Sepbin\System\Route\IRoute;
 use Sepbin\System\Core\Exception\RepeatApplicationException;
+use Sepbin\System\Core\Exception\RouteDelegateException;
 
 /**
  * 应用入口
@@ -144,7 +145,7 @@ class Application extends Base implements IFactoryEnable {
 		}
 		
 		if ($config->check ( 'language' )) {
-			$this->defaultLang = $config->getStr ( 'language', 'zh-CN' );
+			$this->defaultLang = $config->getStr ( 'language', 'zh_CN' );
 		}
 		
 		if( $config->check('default_data_format') ){
@@ -190,6 +191,8 @@ class Application extends Base implements IFactoryEnable {
 		
 		$this->request = new Request();
 		$this->response = new Response();
+		
+		date_default_timezone_set ( $this->dateTimezone );
 		
 	}
 	
@@ -282,10 +285,9 @@ class Application extends Base implements IFactoryEnable {
 	
 	
 	private function setLang() {
-		
-		date_default_timezone_set ( $this->dateTimezone );
+	    
+	    putenv ( "LANGUAGE=" . $this->request->requestLang );
 		setlocale ( LC_ALL, $this->request->requestLang . '.' . $this->charset );
-		putenv ( "LANGUAGE=" . $this->request->requestLang . '.' . $this->charset );
 		
 		/**
 		 * 绑定公共语言库
@@ -306,7 +308,7 @@ class Application extends Base implements IFactoryEnable {
 		
 		$this->hook ( IApplicationHook::class, 'applicationStart', InstanceSet::CALL_VOID, $this );
 		
-		$this->setLang ();
+		
 		
 		if (getApp()->request->getRequestType () != Request::REQUEST_TYPE_CONSOLE) {
 			
@@ -349,7 +351,6 @@ class Application extends Base implements IFactoryEnable {
 			
 		}
 		
-		
 		$this->runRoute($host,$path);
 		
 		$this->hook ( IApplicationHook::class, 'applicationEnd', InstanceSet::CALL_VOID, $this );
@@ -365,7 +366,32 @@ class Application extends Base implements IFactoryEnable {
 	
 	final public function runRoute( $host ,$path ){
 		
-		$this->route->route( $host, $path );
+		$run = $this->route->route( $host, $path );
+		
+		$this->setLang();
+		
+		if(empty($run)) return ;
+		
+		if (is_callable ( $run['delegate'] )) {
+		    
+		    $isFind = true;
+		    $run['delegate'] ( $run['params'] );
+		    
+		    
+		} elseif (! empty ( $run ['delegate'] )) {
+		    
+		    $isFind = true;
+		    $delegate = Factory::getForString ( $run ['delegate'] );
+		    
+		    if (! $delegate instanceof IRouteEnable) {
+		        
+		        throw (new RouteDelegateException ())->appendMsg ( $run ['delegate'] );
+		    }
+		    
+		    $delegate->RouteMapper ( $run['params'] );
+		    
+		}
+		
 		
 	}
 	

@@ -48,7 +48,7 @@ function request() : RequestParam{
 
 /**
  * 获取http响应单例
- * @return \Sepbin\System\Http\HttpResponse
+ * @return HttpResponse
  */
 function getHttp() : HttpResponse{
 	

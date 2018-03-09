@@ -6,6 +6,7 @@ use Sepbin\System\Util\ConsoleUtil;
 use Sepbin\System\Util\FileUtil;
 use Sepbin\System\Util\Data\ClassName;
 use Sepbin\System\Core\Exception\FileCantWriteException;
+use Sepbin\System\Frame\Exception\ConsoleException;
 
 /**
  *
@@ -30,8 +31,17 @@ class Locale extends AbsService
     
     function __construct(){
         
-        $this->targetLang = request()->getStr('t','en-US');
+        $this->targetLang = request()->getStr('t');
         $this->autoTrans = request()->getBool('trans',false);
+        
+        if( empty($this->targetLang) ){
+            throw (new ConsoleException())->appendMsg('The target language can not be empty');
+        }
+        
+        if( !preg_match('/^[a-z]{2,3}_[A-Z]{2}$/', $this->targetLang) ){
+            throw (new ConsoleException())->appendMsg('Language code format error，such as zh_CN');
+        }
+        
         ConsoleUtil::writeLine( 'You are generating '. $this->targetLang );
         
         $this->getModule();
@@ -171,8 +181,8 @@ msgstr ""
             
             $po .= '
 #'.$item['file'].':'.$item['line'].'
-msgid "'.addcslashes($msgid,'\'"').'"
-msgstr "'.addcslashes($item['msg'],'\'"').'"
+msgid "'.addcslashes($msgid,'\'"\\').'"
+msgstr "'.addcslashes($item['msg'],'\'"\\').'"
             ';
         }
         
@@ -198,7 +208,20 @@ msgstr "'.addcslashes($item['msg'],'\'"').'"
         
         $appid = request()->getStr('appid');
         $key = request()->getStr('key');
-        $lang = explode('-', $this->targetLang)[0];
+        $lang = explode('_', $this->targetLang)[0];
+        if($lang == 'fr') $lang = 'fra';
+        if($lang == 'ar') $lang = 'ara';
+        if($lang == 'es') $lang = 'spa';
+        if($lang == 'ko') $lang = 'kor';
+        if($lang == 'bg') $lang = 'bul';
+        if($lang == 'et') $lang = 'est';
+        if($lang == 'da') $lang = 'dan';
+        if($lang == 'fi') $lang = 'fin';
+        if($lang == 'ro') $lang = 'rom';
+        if($lang == 'sl') $lang = 'slo';
+        if($lang == 'sv') $lang = 'swe';
+        if($lang == 'vi') $lang = 'vie';
+        if($this->targetLang == 'zh_TW' || $this->targetLang == 'zh_HK') $lang = 'cht';
         
         $params['q'] = $msg;
         $params['from'] = 'auto';

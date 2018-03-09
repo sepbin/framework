@@ -18,6 +18,10 @@ class Memcache extends ACache
     
     public function _init( \Sepbin\System\Util\FactoryConfig $config ){
         
+        if( !class_exists('Memcache') ){
+            
+        }
+        
         $this->memcached = new \Memcache();
         $servers = $config->get('server','');
         

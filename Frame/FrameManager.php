@@ -62,11 +62,14 @@ class FrameManager extends Base implements IFactoryEnable, IRouteEnable
 			
 		}
 		
-		FrameManager::addRender(\Sepbin\System\Frame\Redirect\RedirectModel::class, 
-		    \Sepbin\System\Frame\Redirect\RedirectRender::class);
+		FrameManager::addRender(\Sepbin\System\Frame\Behavior\Redirect\RedirectModel::class, 
+		    \Sepbin\System\Frame\Behavior\Redirect\RedirectRender::class);
 		
-		FrameManager::addRender(\Sepbin\System\Frame\File\FileModel::class, 
-		    \Sepbin\System\Frame\File\FileRender::class);
+		FrameManager::addRender(\Sepbin\System\Frame\Behavior\File\FileModel::class, 
+		    \Sepbin\System\Frame\Behavior\File\FileRender::class);
+	    
+		FrameManager::addRender(\Sepbin\System\Frame\Behavior\Text\TextModel::class, 
+		    \Sepbin\System\Frame\Behavior\Text\TextRender::class);
 		
 	}
 	
