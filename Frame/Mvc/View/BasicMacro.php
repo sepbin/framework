@@ -2,6 +2,7 @@
 namespace Sepbin\System\Frame\Mvc\View;
 
 use Sepbin\System\Util\Data\ClassName;
+use Sepbin\System\Http\Url;
 
 class BasicMacro extends AbsMacro
 {
@@ -14,19 +15,12 @@ class BasicMacro extends AbsMacro
     }
     
     
-    public function __D_URL( $url='' ){
+    public function __D_URL( $path='' ){
         
-        $url = '/'.$url;
-        
-        if( getApp()->httpRewrite ){
-            return HTTP_ROOT.$url;
-        }
-        
-        if( $url == '/' ) $url = '';
-        
-        return HTTP_ROOT.'/index.php'.$url;
+        return Url::getUrl( $path );
         
     }
+    
     
     
     public function __D_VIEWPATH( $file='' ){
@@ -35,7 +29,26 @@ class BasicMacro extends AbsMacro
         
     }
     
-    public function __O_ACTION( $module, $controller, $action, ...$params ){
+    
+    public function __O_URL( $path = '', string $query='', bool $hold_query=false ){
+         
+        return SyntaxUtil::phpTag( ' \Sepbin\System\Http\Url::getUrl( 
+                '.SyntaxUtil::macroVar($path).', 
+                '.SyntaxUtil::macroVar($query).', 
+                '.SyntaxUtil::macroVar($hold_query).' ) ' );
+        
+        
+    }
+    
+    
+    public function __O_ACTION( $path, ...$params ){
+        
+        $tmp = explode('/', $path);
+        
+        $module = isset($tmp[0])?  ClassName::underlineToCamel($tmp[0],true) : 'Index';
+        $controller = isset($tmp[1])? ClassName::underlineToCamel($tmp[1],true) : 'Layouts';
+        $action = isset($tmp[2])? ClassName::underlineToCamel($tmp[2]): 'index';
+        
         
         $str = '$this->manage->includeController(';
         
@@ -47,10 +60,11 @@ class BasicMacro extends AbsMacro
             $params = array_map(function($val){
                 return SyntaxUtil::macroVar($val);
             }, $params);
-                $params = implode(',', $params);
-                $params = ','.$params;
+            
+            $params = implode(',', $params);
+            $params = ','.$params;
                 
-                $str.=$params;
+            $str.=$params;
         }
         
         $str.= ')';
@@ -59,11 +73,16 @@ class BasicMacro extends AbsMacro
         
     }
     
+    
+    
     public function __O_CONTENT( $key ){
         
         return SyntaxUtil::phpTag(' echo $this->manage->getExtendContent(\''.$key.'\') ');
         
     }
+    
+    
+    
     
     public function __O_EXTENDS_END( $key='' ){
         
@@ -81,15 +100,22 @@ class BasicMacro extends AbsMacro
         
     }
     
+    
+    
+    
     public function __O_EXTENDS_SET( $key, $value ){
         
         return SyntaxUtil::phpTag('
-            
-			$this->manage->extendContent[\''.$key.'\'] = \''.$value.'\';
+            if(!$this->manage->ignoreParent){
+			     $this->manage->extendContent[\''.$key.'\'] = \''.$value.'\';
+            }
             
 		');
         
     }
+    
+    
+    
     
     public function __O_EXTENDS_START( $key ){
         
@@ -98,13 +124,15 @@ class BasicMacro extends AbsMacro
             
 			if( !$this->manage->ignoreParent ){
 				ob_start(function($content){
-					$this->manage->putExtendContent(\''.$key.'\',$content); return "error:'.$key.'";
+					$this->manage->putExtendContent('.SyntaxUtil::macroVar($key).',$content); return "error:'.$key.'";
 				});
 			}
             
 		');
         
     }
+    
+    
     
     public function __O_EXTENDS( $path, ...$params ){
         
@@ -115,25 +143,23 @@ class BasicMacro extends AbsMacro
         $controller = isset($tmp[1])? ClassName::underlineToCamel($tmp[1],true) : 'Layouts';
         $action = isset($tmp[2])? ClassName::underlineToCamel($tmp[2]): 'index';
         
-        $params = array_map( function($val){
-            
-            return SyntaxUtil::macroVar($val);
-            
-        } , $params);
-        
         
         return SyntaxUtil::phpTag('
-                
+           if(!$this->manage->ignoreParent){
 			$this->manage->isParent = true;
-			$this->manage->parentModule = \''.$module.'\';
-			$this->manage->parentController = \''.$controller.'\';
-			$this->manage->parentAction = \''.$action.'\';
-			$this->manage->parentParams = [ '.implode(',', $params).' ];
-			$this->manage->parentFilename = \''. $this->manager->getFilename($module, $controller, $action) .'\';
-                
+			$this->manage->parentModule = '.SyntaxUtil::macroVar($module).';
+			$this->manage->parentController = '.SyntaxUtil::macroVar($controller).';
+			$this->manage->parentAction = '.SyntaxUtil::macroVar($action).';
+			$this->manage->parentParams = '.SyntaxUtil::macroVar($params).';
+			$this->manage->parentFilename = \''. $this->manager->getFilename( $this->manager->getControllerTplFile( $module, $controller, $action ) ) .'\';
+           }
 		');
         
+        
     }   
+    
+    
+    
     
     PUBLIC FUNCTION __O_INCLUDE( $filename ){
         

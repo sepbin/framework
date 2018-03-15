@@ -5,7 +5,7 @@ use Sepbin\System\Util\Traits\TGetType;
 use Sepbin\System\Core\Base;
 use Sepbin\System\Util\IFactoryEnable;
 use Sepbin\System\Util\Factory;
-use Sepbin\System\Http\Exception\SessionHandlerError;
+use Sepbin\System\Core\Exception\NotTypeException;
 
 class Session extends Base implements IFactoryEnable
 {
@@ -75,7 +75,7 @@ class Session extends Base implements IFactoryEnable
         $handler = $config->getInstance('save_handler', $this->saveHandler);
         $handler->setExpire( $this->expire );
         if( !$handler instanceof \SessionHandler ){
-            throw ( new SessionHandlerError() )->appendMsg( $this->saveHandler );
+            throw ( new NotTypeException() )->appendMsg( $this->saveHandler.' need \SessionHandler' );
         }
         
         session_set_save_handler( $handler , true );

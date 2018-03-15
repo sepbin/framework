@@ -8,6 +8,6 @@ class RepeatHookException extends SepException
 	
 	protected $msg = '重复的HOOK';
 	
-	protected $code = 1002;
+	protected $code = 1005;
 	
 }

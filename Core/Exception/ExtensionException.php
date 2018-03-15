@@ -8,6 +8,6 @@ class ExtensionException extends SepException
 	
 	protected $msg = '缺少扩展';
 	
-	protected $code = 1011;
+	protected $code = 1001;
 	
 }

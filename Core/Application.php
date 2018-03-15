@@ -13,7 +13,7 @@ use Sepbin\System\Route\BasicRoute;
 use Sepbin\System\Route\IRoute;
 use Sepbin\System\Core\Exception\RepeatApplicationException;
 use Sepbin\System\Core\Exception\RouteDelegateException;
-
+use Sepbin\System\Core\Exception\NotTypeException;
 /**
  * 应用入口
  * 
@@ -56,6 +56,13 @@ class Application extends Base implements IFactoryEnable {
 	 * @var string
 	 */
 	public $defaultPath = '';
+	
+	
+	/**
+	 * 当前路径
+	 * @var string
+	 */
+	public $currentPath = '';
 	
 	/**
 	 * 是否开启http重写
@@ -167,7 +174,10 @@ class Application extends Base implements IFactoryEnable {
 		foreach ($routes as $item){
 		    if( is_array($item) ){
 		        
-		        $this->route->addRoute($item['rule'], $item['delegate'], isset($item['params'])?$item['params']:[] );
+		        $this->route->addRoute($item['rule'], 
+		            $item['delegate'], 
+		            isset($item['params'])?$item['params']:[] , 
+		            isset($item['restrict'])?$item['restrict']:[] );
 		        
 		    }
 		}
@@ -213,21 +223,8 @@ class Application extends Base implements IFactoryEnable {
 		}
 		
 		$this->hook [$interface_name] [] = $hook_name_or_instance;
-		
 	}
 	
-	/**
-	 * 注册错误钩子
-	 * 
-	 * @param int $errorCode        	
-	 * @param \Closure $func        	
-	 * @return void
-	 */
-	final public function registerErrorHandler(int $error_code, \Closure $func) {
-	    
-		$this->errHandler [$error_code] = $func;
-		
-	}
 	
 	/**
 	 * 执行HOOK
@@ -235,11 +232,12 @@ class Application extends Base implements IFactoryEnable {
 	 * @param string $name 接口名
 	 * @param string $method_name 方法名
 	 * @param int $call_type 执行方式 InstanceSet::CALL_XX
-	 * @param unknown ...$params        	
+	 * @param mixed ...$params        	
 	 * @return void|array
 	 */
 	final public function hook(string $name, string $method_name, int $call_type, ...$params) {
 		
+	   
 		$set = new InstanceSet ( $name, $call_type );
 		$instanceManager = InstanceManager::getInstance ();
 		
@@ -307,9 +305,7 @@ class Application extends Base implements IFactoryEnable {
 	final public function run() {
 		
 		$this->hook ( IApplicationHook::class, 'applicationStart', InstanceSet::CALL_VOID, $this );
-		
-		
-		
+	    
 		if (getApp()->request->getRequestType () != Request::REQUEST_TYPE_CONSOLE) {
 			
 			if ($_SERVER ['PHP_SELF']) {
@@ -428,6 +424,99 @@ class Application extends Base implements IFactoryEnable {
 	
 	
 	
+	/**
+	 * 注册异常处理
+	 *
+	 * @param int $errorCode
+	 * @param \Closure $func
+	 * @return void
+	 */
+	final public function registerErrorHandler( string $rule, $delegate) {
+	    
+	    $this->errHandler[] = [
+	        'rule' => $rule,
+	        'delegate' => $delegate
+	    ];
+	    
+	}
+	
+	final public function registerErrorPage( string $rule, $delegate, $params ){
+	    
+	    $this->errHandler[] = [
+	        'rule' => $rule,
+	        'delegate' => $delegate,
+	        'params' => $params,
+	        'page' => true
+	    ];
+	    
+	}
+	
+	final public function triggerErrorHandler( $errno, $errstr, $errfile, $errline ){
+	    
+	    foreach ($this->errHandler as $item){
+	        
+	        if( $item['rule'] == '*' ){
+	            $this->callErrorHandler($item,$errno, $errstr, $errfile, $errline);
+	            continue;
+	        }
+	        
+	        $dot = strpos($item['rule'], '-');
+	        if( $dot === false ){
+	            if( $item['rule'] == $errno.'' ){
+	                $this->callErrorHandler($item,$errno, $errstr, $errfile, $errline);
+	            }
+	            continue;
+	        }
+	        
+	        $min = intval( substr($item['rule'], 0, $dot) );
+	        $max = intval( substr($item['rule'], $dot+1) );
+	        
+	        if( $errno >= $min && $errno <= $max ){
+	            $this->callErrorHandler($item,$errno, $errstr, $errfile, $errline);
+	        }
+	        
+	        
+	    }
+	    
+	}
+	
+	private $customErrorPage = false;
+	
+	final private function callErrorHandler( $command, $errno, $errstr, $errfile, $errline ){
+	    
+	    if( isset($command['page']) ){
+	        if( $this->customErrorPage ) return ;
+	        $this->customErrorPage = true;
+	        
+	        $this->request->param->put('errno', $errno);
+	        $this->request->param->put('errstr', $errstr);
+	        $this->request->param->put('errfile', $errfile);
+	        $this->request->param->put('errline', $errline);
+	        
+	        $delegate = Factory::getForString ( $command ['delegate'] );
+	        if (! $delegate instanceof IRouteEnable) {
+	            return ;
+	        }
+	        $delegate->RouteMapper ( $command['params'] );
+	        
+	        return ;
+	    }
+	    
+	    if(empty($command['delegate'])) return ;
+	    if( is_callable($command['delegate']) ){
+	        $command['delegate']( $errno, $errstr, $errfile, $errline );
+	        return ;
+	    }
+	    if( is_string($command['delegate']) && class_exists( $command['delegate'] ) ){
+	        $instance = new $command['delegate'];
+	        if( !$instance instanceof AbsExceptionListen ) return ;
+	        $instance->errno = $errno;
+	        $instance->errstr = $errstr;
+	        $instance->errfile = $errfile;
+	        $instance->errline = $errline;
+	        $instance->do();
+	    }
+	}
 	
 	
 	/**
@@ -459,9 +548,12 @@ class Application extends Base implements IFactoryEnable {
 				break;
 		}
 		
-		if (isset ( $this->errHandler [$errno] )) {
-			$this->errHandler [$errno] ( $errno, $errstr, $errfile, $errline );
-		}
+		
+		$this->triggerErrorHandler( $errno, $errstr, $errfile, $errline  );
+		
+// 		if (isset ( $this->errHandler [$errno] )) {
+// 			$this->errHandler [$errno] ( $errno, $errstr, $errfile, $errline );
+// 		}
 		
 		$this->hook ( IApplicationHook::class, 'applicationWarning', InstanceSet::CALL_VOID, $errno, $errstr, $errfile, $errline );
 	
@@ -513,36 +605,28 @@ class Application extends Base implements IFactoryEnable {
 	 */
 	final public function exception($e) {
 		
+	    $buffer = ob_get_contents();
 		ob_end_clean();
-		ob_clean();
+	    
+		$this->triggerErrorHandler($e->getCode (), $e->getMessage (), $e->getFile (), $e->getLine ());
 		
-		if (isset ( $this->errHandler [$e->getCode ()] )) {
-			
-			$this->errHandler[$e->getCode()]( $e->getCode (), $e->getMessage (), $e->getFile (), $e->getLine () );
-			
-		}else{
-		    
+        if( !$this->customErrorPage ){
+            
 			AppExceptionView::$app = $this;
 			AppExceptionView::$err = $e;
-			
+            AppExceptionView::$out = $buffer;
 			if ($this->request->getRequestType () == Request::REQUEST_TYPE_CONSOLE) {
 				AppExceptionView::string ();
 			}
-			
+
 			if ($this->request->getRequestType () == Request::REQUEST_TYPE_BROSWER) {
-				
 				AppExceptionView::html ();
-				
 			}
-			
+
 			if ($this->request->getRequestType () == Request::REQUEST_TYPE_POST) {
-				
 				AppExceptionView::data ();
-				
 			}
-			
-		    
-		}
+        }
 		
 		try {
 			$this->hook ( IApplicationHook::class, 'applicationException', InstanceSet::CALL_VOID, $e->getCode (), $e->getMessage (), $e->getFile (), $e->getLine () );
@@ -552,4 +636,24 @@ class Application extends Base implements IFactoryEnable {
 		$this->response->flush ();
 		
 	}
+	
+	
+	
+	
+	function __call( $name, $args ){
+	    $name = ucfirst($name);
+	    if( substr($name, 0, 6) == 'Enable' ){
+	        $package = substr($name, 6);
+	        $className = '\Sepbin\System\Further\\'.$package.'\\'.$name;
+	        if( !class_exists($className) ){
+	            throw (new NotTypeException())->append( $name );
+	        }
+	        
+	        $className::open( ...$args );
+	    }
+	}
+	
+	
+	
+	
 }

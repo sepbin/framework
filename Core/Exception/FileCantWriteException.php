@@ -8,6 +8,6 @@ class FileCantWriteException extends SepException
 	
 	protected $msg = '文件或目录不可写，请更改权限';
 	
-	protected $code = 1020;
+	protected $code = 1002;
 	
 }

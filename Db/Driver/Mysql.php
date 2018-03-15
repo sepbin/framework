@@ -31,13 +31,14 @@ class Mysql implements IDriver
 		$pass = $config->getStr('pass');
 		$port = $config->getInt('port',3306);
 		$pconnect = $config->getBool('pconnect',false);
+		$charset = $config->getStr('charset','utf8');
 		
 		if( $pconnect ){
-			$this->pdo = new \PDO("mysql:host=$host;dbname=$dbname;$port",$user,$pass,array(
+			$this->pdo = new \PDO("mysql:host=$host;dbname=$dbname;$port;charset=$charset",$user,$pass,array(
 					\PDO::ATTR_PERSISTENT => true
 			));
 		}else{
-			$this->pdo = new \PDO("mysql:host=$host;dbname=$dbname;$port",$user,$pass);
+		    $this->pdo = new \PDO("mysql:host=$host;dbname=$dbname;$port;charset=$charset",$user,$pass);
 		}
 		
 	}
@@ -50,7 +51,7 @@ class Mysql implements IDriver
 	}
 	
 	public function exec( string $sql ){
-		
+	    
 		return $this->pdo->exec($sql);
 		
 	}
@@ -64,7 +65,6 @@ class Mysql implements IDriver
 	public function getLastInsertId(){
 		
 		return $this->pdo->lastInsertId();
-		
 	}
 	
 	public function beginTrans(){

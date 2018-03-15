@@ -1,6 +1,5 @@
 <?php
 use Sepbin\System\Util\ConfigUtil;
-use Sepbin\System\Core\Application;
 
 
 //项目根路径
@@ -80,3 +79,4 @@ include __DIR__.'/helper.php';
 
 _registerLib(LIB_PREFIX, LIB_DIR);
 _registerLib(APP_PREFIX, APP_DIR);
+

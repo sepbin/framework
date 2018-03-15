@@ -7,6 +7,8 @@ use Sepbin\System\Db\Driver\IDriver;
 use Sepbin\System\Util\Factory;
 use Sepbin\System\Db\Exception\SqlException;
 use Sepbin\System\Util\ArrayUtil;
+use Sepbin\System\Db\Sql\StandardSql;
+use Sepbin\System\Core\SepException;
 
 class DbManager extends Base implements IFactoryEnable
 {
@@ -26,6 +28,9 @@ class DbManager extends Base implements IFactoryEnable
 	private $configNamespace;
 	
 	private $lastCommand;
+    
+	
+	private $sqlHelper;
 	
 	/**
 	 * 表名前缀
@@ -46,8 +51,9 @@ class DbManager extends Base implements IFactoryEnable
 		$driver = $config->getStr('driver','Sepbin\System\Db\Driver\Mysql');
 		$writeDriver = $config->getBool('write_driver',false);
 		$this->prefix = $config->getStr('prefix');
+		$this->sqlHelper = $config->getStr('sql', StandardSql::class);
 		
-		$this->driver = $config->getInstance('driver', $driver );
+		$this->driver = $config->getInstance('driver', $driver, IDriver::class );
 		
 		if( $writeDriver ){
 			$this->writeDriver = $config->getInstance('write_driver', $driver );
@@ -57,10 +63,13 @@ class DbManager extends Base implements IFactoryEnable
 	
 	public function prepare( $sql, ...$params ){
 		
-		if( !get_magic_quotes_gpc() ){
-			foreach ($params as $key=>$val){
-				$params[$key] = addslashes($val);
-			}
+		foreach ($params as $key=>$val){
+		    if(!is_numeric($val)){
+		        $val = str_replace("'", "''", $val);
+		        $val = "'$val'";
+		    }
+			
+			$params[$key] = $val;
 		}
 		
 		return sprintf($sql, ...$params);
@@ -78,7 +87,9 @@ class DbManager extends Base implements IFactoryEnable
 		$result = $this->exec($sql);
 		
 		if( $result !== false ){
-			return $this->driver->getLastInsertId();
+		    $lastId = $this->driver->getLastInsertId();
+		    if($lastId) return $lastId;
+		    return $result;
 		}
 		
 		return false;
@@ -96,6 +107,13 @@ class DbManager extends Base implements IFactoryEnable
 		
 	}
 	
+	
+	
+	/**
+	 * 执行删除
+	 * @param string $sql
+	 * @return mixed
+	 */
 	public function delete( string $sql ){
 	    
         return $this->exec($sql);
@@ -133,6 +151,8 @@ class DbManager extends Base implements IFactoryEnable
 		
 	}
 	
+	
+	
 	/**
 	 * 获取一个
 	 * @param string $sql
@@ -142,6 +162,8 @@ class DbManager extends Base implements IFactoryEnable
 	    if(!empty($result)) return current($result);
 	    return '';
 	}
+	
+	
 	
 	/**
 	 * 获取一列
@@ -163,10 +185,37 @@ class DbManager extends Base implements IFactoryEnable
 	
 	
 	
-	
+	/**
+	 * 关闭连接
+	 */
 	public function close(){
 		$this->driver->close();
 		Factory::destroy( get_class($this), $this->configNamespace );
+	}
+	
+	
+	/**
+	 * 开始事务
+	 */
+	public function beginTrans(){
+	    $this->driver->beginTrans();
+	}
+	
+	
+	/**
+	 * 回滚事务
+	 */
+	public function rollBack(){
+	    $this->driver->rollBackTrans();
+	}
+	
+	
+	
+	/**
+	 * 提交事务
+	 */
+	public function commit(){
+	    $this->driver->commitTrans();
 	}
 	
 	
@@ -175,47 +224,98 @@ class DbManager extends Base implements IFactoryEnable
 	 */
 	public function trans( \Closure $process ){
 		
-		$this->driver->beginTrans();
+		$this->beginTrans();
 		
-		if( $process() === false ){
-			$this->driver->rollBackTrans();
-			return false;
+		try {
+    		if( $process( $this ) === false ){
+    			$this->rollBack();
+    			return false;
+    		}
+		}catch ( \Exception $e ){
+		    
+		    $this->rollBack();
+		    
+		    throw $e;
+		    
+		}catch ( \Error $e ){
+		    
+		    $this->rollBack();
+		    
+		    throw $e;
+		    
 		}
 		
-		$this->driver->commitTrans();
+		$this->commit();
 		return true;
 		
 	}
 	
 	
+	
+	
+	/**
+	 * 执行SQL，并返回结果
+	 * @param string $sql
+	 * @return mixed
+	 */
 	public function exec( string $sql ){
 	    
 	    $this->lastCommand = $sql;
-		$result = $this->driver->exec($sql);
-		
+	    
+	    if( $this->writeDriver == null ){
+	        $result = $this->driver->exec($sql);
+	    }else{
+	        $result = $this->writeDriver->exec($sql);
+	    }
+	    
 		if( getApp()->isDebug() && $result === false ){
-			throw (new SqlException())->appendMsg( $this->driver->getError() .'['.$this->getLastCommand().']' );
+		    if( $this->writeDriver == null ) $err = $this->driver->getError();
+		    else $err = $this->writeDriver->getError();
+			throw (new SqlException())->appendMsg( $err .'['.$this->getLastCommand().']' );
 		}
 		
 		return $result;
 		
 	}
 	
+	
+	
+	
+	/**
+	 * 获取sql助手
+	 * @param string $table
+	 * @return \Sepbin\System\Db\AbsSql
+	 */
 	public function getSQL( string $table ){
 	    
-	    return (new SqlHelper($table))->pre($this->prefix)->setManager($this);
+	    return (new $this->sqlHelper($table))->pre($this->prefix)->setManager($this);
 	    
 	}
 	
-	public function getSQLWhere(){
+	
+	
+	/**
+	 * 获取sql的where生成器
+	 * @return \Sepbin\System\Db\SqlWhere
+	 */
+	public function getWhere(){
 	    
-	    return (new SqlWhereHelper())->pre($this->prefix);
+	    return (new SqlWhere())->pre($this->prefix);
 	    
 	}
 	
+	
+	
+	
+	
+	/**
+	 * 获取最后执行的指令
+	 * @return \Sepbin\System\Db\string
+	 */
 	public function getLastCommand(){
 	    return $this->lastCommand;
 	}
+    
 	
 	
 }

@@ -8,6 +8,6 @@ class ConnectException extends SepException
 	
 	protected $msg = '连接数据库错误';
 	
-	protected $code = 1011;
+	protected $code = 1031;
 	
 }

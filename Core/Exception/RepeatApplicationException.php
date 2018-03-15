@@ -8,6 +8,6 @@ class RepeatApplicationException extends SepException
     
     protected $msg = '重复的Application实例';
     
-    protected $code = 1099;
+    protected $code = 1004;
     
 }

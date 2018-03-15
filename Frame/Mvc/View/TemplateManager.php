@@ -12,6 +12,7 @@ use Sepbin\System\Util\Factory;
 use Sepbin\System\Util\IFactoryEnable;
 use Sepbin\System\Frame\Action;
 use Sepbin\System\Core\Exception\FileCantWriteException;
+use Sepbin\System\Frame\Hook\IMvcTemplateAdvHook;
 
 
 
@@ -36,7 +37,7 @@ class TemplateManager extends Base implements IFactoryEnable
 	 * 开发模式是否开启,如果为true将永远不会缓存
 	 * @var string
 	 */
-	public $dev = false;
+	public $dev = true;
 	
 	
 	/**
@@ -50,23 +51,8 @@ class TemplateManager extends Base implements IFactoryEnable
 	 * 使用的样式
 	 * @var string
 	 */
-	public $style = 'Index';
+	public $style = '';
 	
-	
-	/**
-	 * 使用的layout名称
-	 * @var string
-	 */
-	public $layoutName = 'layout';
-	
-	
-	/**
-	 * 缓存目录名称
-	 * @var string
-	 */
-	public $cacheDirName = 'Cache';
-	
-	public $cacheDir = '';
 	
 	
 	/**
@@ -90,6 +76,7 @@ class TemplateManager extends Base implements IFactoryEnable
 	
 	public $filename;
 	
+	public $tplFile;
 	
 	public $isParent = false;
 	public $parentFilename = '';
@@ -116,6 +103,7 @@ class TemplateManager extends Base implements IFactoryEnable
 		$this->extension = $config->get('ext_name','html');
 		$this->parseEngine = $config->get('parse_engine',ArtTemplate::class);
 		$this->cacheDirName = $config->get('cache_dir', DATA_DIR.'/template');
+		$this->dev = $config->get('dev',false);
 		$this->cacheDirName = rtrim($this->cacheDirName,'/');
 		$this->stylePath = HTTP_ROOT.'/view/'.$this->style;
 		
@@ -132,10 +120,12 @@ class TemplateManager extends Base implements IFactoryEnable
 		
 		$this->controller = $controller;
 		$this->action = $action;
-		$this->filename = $this->getFilename( $this->controller->moduleName, $this->controller->controllerName, $this->action );
+		
 		
 		HookRun::void(IMvcTemplateHook::class, 'tplManagerInit', $this);
 		
+		$this->tplFile = $this->getControllerTplFile( $this->controller->moduleName, $this->controller->controllerName, $this->action );
+		$this->filename = $this->getFilename( $this->tplFile );
 		$this->langDomain = 'view_'. ClassName::camelToUnderline( $this->controller->moduleName );
 		
 		bindtextdomain($this->langDomain , PUBLIC_DIR.'/'.$this->stylePath.'/locale');
@@ -151,14 +141,17 @@ class TemplateManager extends Base implements IFactoryEnable
 	 * @param string $action_name
 	 * @return string
 	 */
-	public function getFilename( string $module_name, string $controller_name, string $action_name ) : string {
+	public function getFilename( $tpl_path ) : string {
 	    
-	    $controller_dir = ClassName::camelToUnderline( $module_name ).'/'. ClassName::camelToUnderline( $controller_name );
-	       $filename = $this->styleDir.'/'.$controller_dir.'/'.ClassName::camelToUnderline($action_name).'.'.$this->extension;
-		$filename = str_replace('\\', '/', $filename);
+	    $filename = $this->styleDir.'/'.$tpl_path;
+		return realpath($filename);
 		
-		return $filename;
-		
+	}
+	
+	public function getControllerTplFile( string $module_name, string $controller_name, string $action_name ) : string{
+	    return ClassName::camelToUnderline( $module_name ).'/'
+	        . ClassName::camelToUnderline( $controller_name ).'/'
+	        . ClassName::camelToUnderline($action_name).'.'.$this->extension;
 	}
 	
 	
@@ -223,6 +216,7 @@ class TemplateManager extends Base implements IFactoryEnable
 		|| !file_exists( $cacheFilename )
 		|| filemtime($filename) > filemtime($cacheFilename) ){
 			
+		    
 			$this->callParseEngine( $filename );
 			
 		}
@@ -247,8 +241,16 @@ class TemplateManager extends Base implements IFactoryEnable
 		
 		if( !$this->ignoreParent ){
 			while( $this->isParent ){
-				$parentData = array();
+			    
+				if( !HookRun::strict(IMvcTemplateAdvHook::class, 'allowExtends', $this->parentModule, $this->parentController, $this->parentAction) ){
+				    foreach ($this->extendContent as $item){
+				        putBuffer( $item );
+				    }
+				    break;
+				    
+				}
 				
+				$parentData = array();
 				$dispatchClass = 'SepApp\Application\\'.$this->parentModule .'\\'.$this->parentController.'Controller' ;
 				
 				if( class_exists($dispatchClass) && method_exists($dispatchClass, $this->parentAction.'Action') ){
@@ -330,6 +332,7 @@ class TemplateManager extends Base implements IFactoryEnable
 	 */
 	public function includeController( string $module_name, string $controller_name, string $action_name,...$params ){
 		
+	    $this->ignoreParent = true;
 		$dispatchClass = 'SepApp\Application\\'. $module_name .'\\'.$controller_name.'Controller' ;
 		/**
 		 * 
@@ -340,10 +343,11 @@ class TemplateManager extends Base implements IFactoryEnable
 		$controller->controllerName = $controller_name;
 		$controller->actionName = $action_name;
 		$action = $action_name.'Action';
-		$filename = $this->getFilename($controller->moduleName, $controller->controllerName, $action_name);
+		$filename = $this->getFilename( $this->getControllerTplFile(  $controller->moduleName, $controller->controllerName, $action_name ) );
 		$this->basisCacheCallParseEngine( $filename );
 		$object = new TemplateObject($this, $this->getCacheFilename($filename), $controller->$action(...$params)->getData());
 		$object->include( $this->getCacheFilename($filename) );
+		$this->ignoreParent = false;
 		
 	}
 	

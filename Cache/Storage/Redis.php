@@ -2,6 +2,7 @@
 namespace Sepbin\System\Cache\Storage;
 
 use Sepbin\System\Util\Factory;
+use Sepbin\System\Core\Exception\ExtensionException;
 
 class Redis extends ACache
 {
@@ -18,10 +19,15 @@ class Redis extends ACache
     
     public function _init( \Sepbin\System\Util\FactoryConfig $config ){
         
+        if( !class_exists('\Redis') ){
+            throw (new ExtensionException())->appendMsg('Redis');
+        }
+        
         $this->driver = new \Redis();
         
         $host = $config->getStr('host','localhost');
         $port = $config->getInt('port',6379);
+        $pass = $config->getStr('pass');
         
         $pconnect = $config->getBool('pconnect',false);
         
@@ -31,10 +37,18 @@ class Redis extends ACache
             $this->driver->pconnect( $host, $port );
         }
         
+        if(!empty($pass)){
+            $this->driver->auth($pass);
+        }
+        
+        $this->driver->setOption(\Redis::OPT_SERIALIZER,\Redis::SERIALIZER_IGBINARY);
+        
+        
     }
     
     
     public function set( $key, $value, $expire ){
+        
         
         $result = $this->driver->set( $key, $value );
         $this->driver->expire( $key, $expire );

@@ -8,6 +8,6 @@ class DenySingletonException extends SepException
     
     protected $msg = '不允许子类使用单例';
     
-    protected $code = 1015;
+    protected $code = 1022;
     
 }

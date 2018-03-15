@@ -15,6 +15,8 @@ class AppExceptionView extends Base
     
     static $app;
     
+    static $out;
+    
     static public function html(){
         
         ?>
@@ -108,22 +110,22 @@ class AppExceptionView extends Base
 	    	));
     	}
     	
-    	dump($msg);
+    	putBuffer($msg);
     	
     }
     
     static public function string(){
     	
-    	dump('');
-    	dump('');
-    	dump( ConsoleUtil::text(' throw exception',60,ConsoleUtil::COLOR_YELLOW, ConsoleUtil::COLOR_WHITE) );
-    	dump( ConsoleUtil::text(' errcode',10,ConsoleUtil::COLOR_WHITE,ConsoleUtil::COLOR_BLACK). ConsoleUtil::text('',2) . ConsoleUtil::text( self::$err->getCode() ) );
-    	dump( ConsoleUtil::text(' message',10,ConsoleUtil::COLOR_WHITE,ConsoleUtil::COLOR_BLACK). ConsoleUtil::text('',2) . ConsoleUtil::text( self::$err->getMessage() ) );
+        putBuffer('');
+        putBuffer('');
+        putBuffer( ConsoleUtil::text(' throw exception',60,ConsoleUtil::COLOR_YELLOW, ConsoleUtil::COLOR_WHITE) );
+        putBuffer( ConsoleUtil::text(' errcode',10,ConsoleUtil::COLOR_WHITE,ConsoleUtil::COLOR_BLACK). ConsoleUtil::text('',2) . ConsoleUtil::text( self::$err->getCode() ) );
+        putBuffer( ConsoleUtil::text(' message',10,ConsoleUtil::COLOR_WHITE,ConsoleUtil::COLOR_BLACK). ConsoleUtil::text('',2) . ConsoleUtil::text( self::$err->getMessage() ) );
     	if( self::$app->isDebug() ){
-    		dump( ConsoleUtil::text(' file',10,ConsoleUtil::COLOR_WHITE,ConsoleUtil::COLOR_BLACK). ConsoleUtil::text('',2) . ConsoleUtil::text( self::$err->getFile() ) );
-    		dump( ConsoleUtil::text(' line',10,ConsoleUtil::COLOR_WHITE,ConsoleUtil::COLOR_BLACK). ConsoleUtil::text('',2) . ConsoleUtil::text( self::$err->getLine() ) );
+    	    putBuffer( ConsoleUtil::text(' file',10,ConsoleUtil::COLOR_WHITE,ConsoleUtil::COLOR_BLACK). ConsoleUtil::text('',2) . ConsoleUtil::text( self::$err->getFile() ) );
+    	    putBuffer( ConsoleUtil::text(' line',10,ConsoleUtil::COLOR_WHITE,ConsoleUtil::COLOR_BLACK). ConsoleUtil::text('',2) . ConsoleUtil::text( self::$err->getLine() ) );
     	}
-    	dump( ConsoleUtil::text(' sepbin version '.getApp()->version,60,ConsoleUtil::COLOR_YELLOW, ConsoleUtil::COLOR_WHITE) );
+    	putBuffer( ConsoleUtil::text(' sepbin version '.getApp()->version,60,ConsoleUtil::COLOR_YELLOW, ConsoleUtil::COLOR_WHITE) );
     	
     }
     

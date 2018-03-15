@@ -44,9 +44,9 @@ class Factory
 		
 		if( !isset( self::$scheme[ $name ][ $config_namespace ] ) ){
 			
-			if( $config_namespace != $name && !ConfigUtil::getInstance()->check($config_namespace) ){
-				trigger_error('代码中声明却缺少命名空间为'.$config_namespace.'的配置',E_USER_WARNING);
-			}
+// 			if( $config_namespace != $name && !ConfigUtil::getInstance()->check($config_namespace) ){
+// 				trigger_error('代码中声明却缺少命名空间为'.$config_namespace.'的配置',E_USER_WARNING);
+// 			}
 			
 			$config = new FactoryConfig( $config_namespace , $names_config );
 			$config->file = $config_file;

@@ -3,14 +3,14 @@ namespace Sepbin\System\Frame;
 
 
 use Sepbin\System\Util\Factory;
-use Sepbin\System\Frame\Exception\NotFoundException;
+use Sepbin\System\Core\Exception\NotFoundException;
 use Sepbin\System\Frame\Exception\ActionResultErrorException;
 use Sepbin\System\Core\Base;
-use Sepbin\System\Frame\Exception\RenderErrorException;
 use Sepbin\System\Util\HookRun;
 use Sepbin\System\Frame\Hook\IMvcRenderHook;
 use Sepbin\System\Frame\Mvc\ViewRender;
 use Sepbin\System\Frame\Hook\IMvcModelHook;
+use Sepbin\System\Core\Exception\NotTypeException;
 
 class Action extends Base
 {	
@@ -135,7 +135,7 @@ class Action extends Base
 		if( isset(FrameManager::$render[ get_class($result) ]) ){
 		    $this->render = new FrameManager::$render[ get_class($result) ];
 			if( !$this->render instanceof AbsRender ){
-			    throw (new RenderErrorException())->appendMsg( FrameManager::render[ get_class($result) ] );
+			    throw (new NotTypeException())->appendMsg( FrameManager::render[ get_class($result) ].' need AbsRender' );
 			}
 			
 		}else{

@@ -3,6 +3,7 @@ namespace Sepbin\System\Cache\Storage;
 
 
 use Sepbin\System\Util\Factory;
+use Sepbin\System\Core\Exception\ExtensionException;
 
 class Memcache extends ACache
 {
@@ -18,8 +19,8 @@ class Memcache extends ACache
     
     public function _init( \Sepbin\System\Util\FactoryConfig $config ){
         
-        if( !class_exists('Memcache') ){
-            
+        if( !class_exists('\Memcache') ){
+            throw (new ExtensionException())->appendMsg('Memcache');
         }
         
         $this->memcached = new \Memcache();

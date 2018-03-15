@@ -47,7 +47,7 @@ class ResponseOutDefault implements IResponseHijack
         
         $http->sendHeader();
         
-        if($this->contentType == 'text/xml'){
+        if($http->contentType == 'text/xml'){
             echo ArrayXML::arrayToXmlString($data);
         }else{
             echo json_encode($data,JSON_UNESCAPED_UNICODE);

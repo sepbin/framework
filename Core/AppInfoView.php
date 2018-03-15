@@ -48,20 +48,20 @@ class AppInfoView extends Base
     
     static public function string(){
     	
-    	dump('');
-    	dump('');
-    	dump( ConsoleUtil::text('debug info',60,ConsoleUtil::COLOR_YELLOW, ConsoleUtil::COLOR_WHITE) );
-    	dump ( ConsoleUtil::text( "run time:".self::$runtime."s  memory:".self::$runmemory."M", 60, ConsoleUtil::COLOR_BLACK, ConsoleUtil::COLOR_WHITE ) );
-    	dump('');
+    	putBuffer('');
+    	putBuffer('');
+    	putBuffer( ConsoleUtil::text('debug info',60,ConsoleUtil::COLOR_YELLOW, ConsoleUtil::COLOR_WHITE) );
+    	putBuffer ( ConsoleUtil::text( "run time:".self::$runtime."s  memory:".self::$runmemory."M", 60, ConsoleUtil::COLOR_BLACK, ConsoleUtil::COLOR_WHITE ) );
+    	putBuffer('');
     	if( !empty(AppInfo::$log) ){
 	    	foreach ( AppInfo::$log as $item ){
-				dump( $item->msg."\n" );
+	    	    putBuffer( $item->msg."\n" );
 	    	}
     	}else{
-    		dump('good. no errors');	
+    	    putBuffer('good. no errors');	
     	}
-    	dump('');
-    	dump( ConsoleUtil::text('sepbin version '.getApp()->version,60,ConsoleUtil::COLOR_YELLOW, ConsoleUtil::COLOR_WHITE) );
+    	putBuffer('');
+    	putBuffer( ConsoleUtil::text('sepbin version '.getApp()->version,60,ConsoleUtil::COLOR_YELLOW, ConsoleUtil::COLOR_WHITE) );
     	
     }
     
@@ -75,8 +75,8 @@ class AppInfoView extends Base
     	foreach ( AppInfo::$log as $item ){
     		$data['debug_info']['warnings'][] = $item->msg;
     	}
-    	
-    	dump($data);
+        
+    	putBuffer($data);
     	
     }
     

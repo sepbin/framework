@@ -26,6 +26,7 @@ class HookRun
 	
 	static public function strict( string $name, string $method_name, ...$params  ):bool{
 		
+	    
 		return getApp()->hook($name, $method_name, InstanceSet::CALL_BOOL_STRICT, ...$params);
 		
 	}

@@ -12,7 +12,7 @@ use Sepbin\System\Cache\TempFile;
  * 获取application实例
  * @return \Sepbin\System\Core\Application
  */
-function getApp() : Application{
+function getApp() : Sepbin\System\Core\Application{
     
     $appName = config()->getStr('app_instance',\Sepbin\System\Core\Application::class);
     
@@ -93,7 +93,7 @@ function getTemp(){
  * 输出
  * @param unknown $data
  */
-function dump( $data ){
+function putBuffer( $data ){
     
     getApp()->getResponse()->put($data);
     

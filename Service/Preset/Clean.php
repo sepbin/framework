@@ -5,6 +5,7 @@ namespace Sepbin\System\Service\Preset;
 use Sepbin\System\Util\FileUtil;
 use Sepbin\System\Util\ConsoleUtil;
 use Sepbin\System\Service\AbsService;
+use Sepbin\System\Cache\TempFile;
 
 /**
  * @desc clean project
@@ -33,7 +34,7 @@ class Clean extends AbsService
 		        ConsoleUtil::writeError( 'Permission denied ' . $file );
 		    }
 		    
-		    usleep(50000);
+		    usleep(30000);
 		});
 		
 	}
@@ -42,6 +43,10 @@ class Clean extends AbsService
 	 * 清理临时存取目录
 	 */
 	private function clearTempPath(){
+	    
+	    ConsoleUtil::writeLine( 'clearing temp cache....' );
+	    $temp = TempFile::getInstance();
+	    $temp->clean();
 	    
 	}
 	

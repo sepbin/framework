@@ -95,7 +95,7 @@ class FrameManager extends Base implements IFactoryEnable, IRouteEnable
 			self::$action = $params['action'];
 		}
 		
-		dump( $this->dispatch() );
+		putBuffer( $this->dispatch() );
 		
 	}
 	

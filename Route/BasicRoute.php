@@ -2,9 +2,6 @@
 namespace Sepbin\System\Route;
 
 use Sepbin\System\Core\Exception\NotFoundException;
-use Sepbin\System\Core\IRouteEnable;
-use Sepbin\System\Core\Exception\RouteDelegateException;
-use Sepbin\System\Util\Factory;
 use Sepbin\System\Core\Request;
 use Sepbin\System\Util\HookRun;
 use Sepbin\System\Route\Hook\IRouteHook;
@@ -32,6 +29,8 @@ class BasicRoute implements IRoute
         
         $host = HookRun::tunnel(IRouteHook::class, 'routeHost', $host);
         $path = HookRun::tunnel(IRouteHook::class, 'routePath', $path);
+        
+        getApp()->currentPath = $path;
         
         $isFind = false;
         
