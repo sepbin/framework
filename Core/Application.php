@@ -645,11 +645,13 @@ class Application extends Base implements IFactoryEnable {
 	    if( substr($name, 0, 6) == 'Enable' ){
 	        $package = substr($name, 6);
 	        $className = '\Sepbin\System\Further\\'.$package.'\\'.$name;
-	        if( !class_exists($className) ){
+	        if( !class_exists($className) || !method_exists($className, 'open') ){
 	            throw (new NotTypeException())->append( $name );
 	        }
-	        
 	        $className::open( ...$args );
+	    }else{
+	        throw (new SepException())->appendMsg('not find '.$name);
+	        
 	    }
 	}
 	

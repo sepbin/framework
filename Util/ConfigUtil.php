@@ -3,6 +3,7 @@ namespace Sepbin\System\Util;
 
 use Sepbin\System\Util\Data\DotName;
 use Sepbin\System\Util\Traits\TGetType;
+use Sepbin\System\Util\Data\ClassName;
 
 class ConfigUtil
 {
@@ -216,6 +217,17 @@ class ConfigUtil
 	    
 	    if( !is_string($d) ) return false;
 	    return true;
+	    
+	}
+	
+	public function getSubConfName( string $option ,string $name ){
+	    
+	    
+	    $config_name = substr($name, strrpos($name, '\\')+1);
+	    $config_name = ClassName::camelToUnderline($config_name);
+	    $config_name = $option.'_'.$config_name;
+	    
+	    return $config_name;
 	    
 	}
 	

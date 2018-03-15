@@ -3,7 +3,6 @@ namespace Sepbin\System\Util;
 
 use Sepbin\System\Util\Traits\TGetType;
 use Sepbin\System\Util\Exception\FactoryTypeException;
-use Sepbin\System\Util\Data\ClassName;
 use Sepbin\System\Util\Exception\DenySingletonException;
 
 class FactoryConfig
@@ -60,11 +59,11 @@ class FactoryConfig
 	}
 	
 	
+	
 	public function getInstance( string $name_pre , string $name, $check_type='', bool $allow_pointer = true ){
 		
-	    $config_name = substr($name, strrpos($name, '\\')+1);
-	    $config_name = ClassName::camelToUnderline($config_name);
-	    $config_name = $this->namespace.'.'.$name_pre.'_'.$config_name;
+	    
+	    $config_name = $this->namespace.'.'.config()->getSubConfName($name_pre, $name);
 	    
 	    if( !$allow_pointer && config()->checkPointer( $config_name ) ){
 	        throw ( new DenySingletonException() )->appendMsg( $config_name );

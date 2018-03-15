@@ -8,7 +8,6 @@ use Sepbin\System\Util\Factory;
 use Sepbin\System\Db\Exception\SqlException;
 use Sepbin\System\Util\ArrayUtil;
 use Sepbin\System\Db\Sql\StandardSql;
-use Sepbin\System\Core\SepException;
 
 class DbManager extends Base implements IFactoryEnable
 {

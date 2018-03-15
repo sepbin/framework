@@ -34,6 +34,7 @@ class Cookie extends Base implements IFactoryEnable
 			$config_namespace = 'cookie';
 		}
 		
+	    
 		return Factory::get(Cookie::class, $config_namespace,$config_file,$config_path);
 		
 	}
@@ -43,7 +44,7 @@ class Cookie extends Base implements IFactoryEnable
 		
 		$this->prefix = $config->getStr('prefix');
 		$this->expire = $config->getInt('expire',1800);
-		$this->isEncrypt = $config->getBool('is_encrypt',true);
+		$this->isEncrypt = $config->getBool('is_encrypt',false);
 		$this->encryptMethod = $config->getStr('encrypt', Aes128Cbc::class);
 		
 		if( $this->isEncrypt ){

@@ -11,6 +11,9 @@ use Sepbin\System\Util\HookRun;
 use Sepbin\System\Frame\Hook\IMvcRouteHook;
 use Sepbin\System\Http\UpFile;
 use Sepbin\System\Http\UpBase64Image;
+use Sepbin\System\Frame\Hook\IMvcDispatch;
+use Sepbin\System\Frame\Exception\AccessDeniedException;
+use Sepbin\System\Frame\Exception\OutputDeniedException;
 
 class FrameManager extends Base implements IFactoryEnable, IRouteEnable
 {
@@ -62,6 +65,7 @@ class FrameManager extends Base implements IFactoryEnable, IRouteEnable
 			
 		}
 		
+		
 		FrameManager::addRender(\Sepbin\System\Frame\Behavior\Redirect\RedirectModel::class, 
 		    \Sepbin\System\Frame\Behavior\Redirect\RedirectRender::class);
 		
@@ -84,7 +88,6 @@ class FrameManager extends Base implements IFactoryEnable, IRouteEnable
 	    
 		if( !empty($params['module']) ){
 			self::$module = ClassName::underlineToCamel( $params['module'], true );
-			
 		}
 		
 		if( !empty($params['controller']) ){
@@ -95,7 +98,12 @@ class FrameManager extends Base implements IFactoryEnable, IRouteEnable
 			self::$action = $params['action'];
 		}
 		
-		putBuffer( $this->dispatch() );
+		if( HookRun::strict(IMvcDispatch::class, 'dispatchBefore', self::$module, self::$controller, self::$action ) ){
+		    putBuffer( $this->dispatch() );
+		}else{
+		    throw (new AccessDeniedException())->appendMsg( $params['module']. ' '. $params['controller'].' '.$params['action'] );
+		}
+		
 		
 	}
 	
@@ -166,7 +174,14 @@ class FrameManager extends Base implements IFactoryEnable, IRouteEnable
 		
 		$result = $action->$actionName(...$requestParams);
 		
-		return $result;
+		if( HookRun::strict(IMvcDispatch::class, 'dispatchAfter', $result) ){
+		    return $result;
+		}else{
+		    throw (new OutputDeniedException());
+		}
+		
+		
+		
 	}
 	
 	
